@@ -3,6 +3,7 @@ import { arrangementFrom, type ShapeRenderer } from '../../engine/shapes'
 import { newId } from '../../engine/random'
 import type { Action } from '../../state/reducer'
 import type { Arrangement, PatternState, Stamp } from '../../state/types'
+import { TurnDial } from '../TurnDial'
 import type { FrameBox } from './WorkFrame'
 
 type Drag =
@@ -11,6 +12,11 @@ type Drag =
   | { kind: 'turn'; id: number; from: number; rot: number }
 
 const wrap = (v: number) => ((v % 1) + 1) % 1
+/** Any angle as -180..180, so 370° reads as 10°. */
+const norm = (deg: number) => {
+  const d = ((((deg + 180) % 360) + 360) % 360) - 180
+  return d === -180 ? 180 : Math.round(d)
+}
 
 /**
  * Arranging shapes inside one tile. Drag a shape to move it, use its handles
@@ -123,8 +129,9 @@ export function ShapeFrame({
         dispatch({ type: 'updateStamp', id: d.id, patch: { size } })
       } else {
         const now = (Math.atan2(py - cy, px - cx) * 180) / Math.PI
-        let rot = d.rot + now - d.from
+        let rot = norm(d.rot + now - d.from)
         if (e.shiftKey) rot = Math.round(rot / 15) * 15
+        else if (Math.abs(rot - Math.round(rot / 90) * 90) < 8) rot = norm(Math.round(rot / 90) * 90)
         dispatch({ type: 'updateStamp', id: d.id, patch: { rot } })
       }
     }
@@ -144,6 +151,13 @@ export function ShapeFrame({
   return (
     <>
       <canvas ref={canvasRef} className="frame-canvas" aria-hidden="true" />
+      {sel && (
+        <TurnDial
+          value={norm(sel.rot)}
+          label="Turn shape"
+          onChange={(rot) => dispatch({ type: 'updateStamp', id: sel.id, patch: { rot } })}
+        />
+      )}
       <svg
         className="frame-overlay"
         width={box.w}
