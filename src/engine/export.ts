@@ -11,12 +11,15 @@ export interface ExportPreset {
   k: number
 }
 
+/** The repeat on its own, then the PNG sizes people ask for most. */
 export const EXPORTS: ExportPreset[] = [
-  { id: 'tile', name: 'One tile', hint: 'Repeats forever. For Canva, Cricut, Spoonflower', k: 3 },
-  { id: 'phone', name: 'Phone wallpaper', hint: '1290 × 2796', width: 1290, height: 2796, k: 3 },
-  { id: 'desktop', name: 'Desktop wallpaper', hint: '2880 × 1800', width: 2880, height: 1800, k: 2 },
-  { id: 'square', name: 'Square post', hint: '2160 × 2160', width: 2160, height: 2160, k: 2 },
-  { id: 'a4', name: 'A4 print', hint: 'True size at 300 dpi', width: 2480, height: 3508, k: 300 / 96 },
+  { id: 'tile', name: 'One tile', hint: 'Repeats seamlessly', k: 3 },
+  { id: '1080', name: '1080 × 1080', hint: 'Square', width: 1080, height: 1080, k: 2 },
+  { id: '2048', name: '2048 × 2048', hint: 'Large square', width: 2048, height: 2048, k: 2 },
+  { id: '1080x1350', name: '1080 × 1350', hint: 'Portrait 4:5', width: 1080, height: 1350, k: 2 },
+  { id: '1920x1080', name: '1920 × 1080', hint: 'Full HD 16:9', width: 1920, height: 1080, k: 2 },
+  { id: '3840x2160', name: '3840 × 2160', hint: '4K 16:9', width: 3840, height: 2160, k: 3 },
+  { id: 'a4', name: '2480 × 3508', hint: 'A4 at 300 dpi, true size', width: 2480, height: 3508, k: 300 / 96 },
 ]
 
 export async function exportPng(renderer: Renderer, preset: ExportPreset, name: string) {

@@ -9,6 +9,10 @@
     { "id": "cross", "name": "Cross", "file": "motifs/cross.svg" },
     { "id": "leaf", "name": "Leaf", "file": "motifs/leaf.svg" },
     { "id": "star", "name": "Star", "file": "motifs/star.svg" },
-    { "id": "arch", "name": "Arch", "file": "motifs/arch.svg" }
+    { "id": "arch", "name": "Arch", "file": "motifs/arch.svg" },
+    { "id": "circle", "name": "Circle", "file": "motifs/circle.svg" },
+    { "id": "petal", "name": "Petal", "file": "motifs/petal.svg" },
+    { "id": "door", "name": "Door", "file": "motifs/door.svg" },
+    { "id": "quarter", "name": "Quarter", "file": "motifs/quarter.svg" }
   ]
 }

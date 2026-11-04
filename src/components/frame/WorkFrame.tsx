@@ -7,8 +7,8 @@ export interface FrameBox {
   h: number
 }
 
-/** Space the side panel takes on wide screens (panel width + gaps). */
-const PANEL = 364
+/** Space the style panel takes on wide screens: 320 wide, 12 from the edge, 12 gap. */
+const PANEL = 344
 
 /**
  * Where the working frame sits: centred in the space beside the panel,
@@ -18,7 +18,8 @@ export function frameBox(viewW: number, viewH: number, aspect: number, roomForBa
   const narrow = viewW <= 720
   const freeW = narrow ? viewW : viewW - PANEL
   const freeH = narrow ? viewH * 0.48 : viewH
-  const top = narrow ? 56 : 72
+  // Room for the label that sits above the frame (the header is outside the preview).
+  const top = narrow ? 48 : 64
   const bottom = roomForBar ? (narrow ? 24 : 116) : 48
   const maxW = Math.max(120, Math.min(freeW - 64, 600))
   const maxH = Math.max(120, freeH - top - bottom)

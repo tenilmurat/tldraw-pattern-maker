@@ -95,7 +95,7 @@ export function Preview({
 
   // Where the pen bar sits: hanging off the bottom of the frame, or at the foot of the window.
   const narrow = view.w <= 720
-  const freeW = narrow ? view.w : view.w - 364
+  const freeW = narrow ? view.w : view.w - 344
   const barPosition =
     hasFrame && box
       ? { left: box.left + box.w / 2, top: box.top + box.h - 38 }
