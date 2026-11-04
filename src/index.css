@@ -1,3 +1,30 @@
+/* The pattern is the hero; the panel is a quiet tool tray beside it. */
+:root {
+  --bg: #ecebe8;
+  --surface: #ffffff;
+  --surface-2: #f5f4f2;
+  --ink: #1c1b1a;
+  --muted: #6e6b66;
+  --line: #e4e2de;
+  --focus: #3b6cf6;
+  --radius: 14px;
+  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --surface: #1c1c1c;
+    --surface-2: #262626;
+    --ink: #f0eeea;
+    --muted: #a19d97;
+    --line: #333131;
+    --focus: #7c9cff;
+    color-scheme: dark;
+  }
+}
+
 *,
 *::before,
 *::after {
@@ -12,4 +39,1353 @@ body,
 
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.4 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* --- Layout --------------------------------------------------------------- */
+
+.app {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.preview {
+  position: absolute;
+  inset: 0;
+}
+
+.preview.has-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 35%, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.preview canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.panel {
+  position: absolute;
+  z-index: 10;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.04),
+    0 12px 40px rgb(0 0 0 / 0.14);
+  overflow: hidden;
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@media (max-width: 720px) {
+  .panel {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    height: 52%;
+  }
+}
+
+/* --- Modes ---------------------------------------------------------------- */
+
+.modes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.mode:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.mode[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+/* --- Sections ------------------------------------------------------------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.section:last-child {
+  border-bottom: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.section h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aside,
+.note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.note {
+  margin: -4px 0 0;
+}
+
+/* --- Shapes --------------------------------------------------------------- */
+
+.motif-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.motif-toggle {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    transform 0.15s,
+    background 0.15s;
+}
+
+.motif-toggle:hover {
+  opacity: 1;
+}
+
+.motif-toggle[aria-pressed='true'] {
+  opacity: 1;
+  background: var(--surface-2);
+  border-color: currentColor;
+}
+
+.motif-toggle:active {
+  transform: scale(0.94);
+}
+
+.motif-icon {
+  display: grid;
+  width: 26px;
+  height: 26px;
+}
+
+.motif-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.order {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.order-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  cursor: grab;
+}
+
+.order-list li .grip {
+  color: var(--muted);
+  display: flex;
+}
+
+.order-list li .motif-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.order-list li.is-dragging {
+  opacity: 0.4;
+}
+
+/* --- Picture-first options ----------------------------------------------- */
+
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.option-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.option-card:hover {
+  border-color: color-mix(in srgb, var(--ink) 30%, var(--line));
+}
+
+.option-card[aria-pressed='true'] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.option-art {
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.mini {
+  display: block;
+  width: 100% !important;
+  height: 56px;
+}
+
+.option-label {
+  padding: 0 2px 2px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* --- Sliders -------------------------------------------------------------- */
+
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.slider-top {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.slider output {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider-ends {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+input[type='range'] {
+  width: 100%;
+  margin: 4px 0 0;
+  accent-color: var(--ink);
+}
+
+/* --- Colours -------------------------------------------------------------- */
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.palette[aria-checked='true'] {
+  border-color: var(--ink);
+}
+
+.palette-swatch {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 7px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06);
+}
+
+.palette-swatch span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.palette-name {
+  padding-left: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* --- Draw ----------------------------------------------------------------- */
+
+.tool-row {
+  display: flex;
+  gap: 2px;
+}
+
+.ink-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ink {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.1);
+  cursor: pointer;
+}
+
+.ink[aria-checked='true'] {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--ink);
+}
+
+/* --- Photo ---------------------------------------------------------------- */
+
+.slice-editor {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.slice-editor canvas,
+.slice-editor svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.slice-editor svg {
+  touch-action: none;
+}
+
+.slice-dim {
+  fill: rgb(0 0 0 / 0.45);
+}
+
+.slice-box {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.5);
+  stroke-dasharray: 3 3;
+}
+
+.slice-shape {
+  fill: rgb(255 255 255 / 0.08);
+  stroke: #fff;
+  stroke-width: 2;
+  cursor: move;
+}
+
+.slice-handle {
+  fill: #fff;
+  stroke: rgb(0 0 0 / 0.35);
+  cursor: nwse-resize;
+}
+
+/* --- Buttons -------------------------------------------------------------- */
+
+.button,
+.chip,
+.icon-button,
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  cursor: pointer;
+}
+
+.button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+.button:hover {
+  background: color-mix(in srgb, var(--ink) 8%, var(--surface-2));
+}
+
+.button.primary {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.button.wide {
+  width: 100%;
+}
+
+.chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chip svg {
+  width: 15px;
+  height: 15px;
+}
+
+.icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.icon-button:disabled {
+  color: var(--muted);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link {
+  padding: 0;
+  background: none;
+  color: var(--focus);
+  font-size: 12px;
+}
+
+/* --- Footer --------------------------------------------------------------- */
+
+.panel-foot {
+  border-top: 1px solid var(--line);
+  padding: 10px;
+}
+
+.foot-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.download-menu {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.download-menu button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  font-weight: 500;
+  text-align: left;
+}
+
+.download-menu button:hover {
+  background: var(--surface-2);
+}
+
+.download-menu small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* --- Working frame -------------------------------------------------------- */
+
+.work-frame {
+  position: absolute;
+  z-index: 2;
+}
+
+.work-frame-label {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  width: max(100%, min(560px, 90vw));
+  bottom: calc(100% + 10px);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--ink);
+  pointer-events: none;
+}
+
+.work-frame-label > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  color: var(--muted);
+}
+
+.work-frame-label b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.frame-link {
+  pointer-events: auto;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* One tile on graph paper: fine squares, a stronger line every tenth. */
+.work-frame-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size:
+    140px 140px,
+    140px 140px,
+    14px 14px,
+    14px 14px;
+  background-position: -1px -1px;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.06),
+    0 0 0 6px color-mix(in srgb, var(--surface) 70%, transparent),
+    0 24px 60px rgb(0 0 0 / 0.22);
+}
+
+.frame-canvas,
+.frame-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.frame-canvas.is-draw {
+  cursor: none;
+}
+
+.frame-overlay {
+  cursor: copy;
+}
+
+.sel-ring {
+  fill: none;
+  stroke: var(--focus);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.sel-stem {
+  stroke: var(--focus);
+  stroke-width: 1.5;
+}
+
+.sel-handle {
+  fill: #fff;
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+
+.sel-handle.turn {
+  cursor: grab;
+}
+
+.sel-handle.size {
+  cursor: nwse-resize;
+}
+
+.show-frame {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.16);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- Drawing bar ---------------------------------------------------------- */
+
+.draw-bar-wrap {
+  --bar-top: #ffffff;
+  --bar-bottom: #efeeeb;
+  --bar-ink: #2a2a2c;
+  --bar-muted: #a19d97;
+  --bar-label: #2a2a2c;
+  --slider-fill: #2a2a2c;
+  --slider-track: rgb(0 0 0 / 0.12);
+  --bar-rule: rgb(0 0 0 / 0.1);
+  --bar-edge: rgb(0 0 0 / 0.06);
+  --bar-sheen: rgb(255 255 255 / 0.95);
+  --barrel-light: #ffffff;
+  --barrel-mid: #f3f2ef;
+  --barrel-edge: #d8d5cf;
+  --tip-bg: #1f1f22;
+  --tip-fg: #ffffff;
+  position: absolute;
+  z-index: 3;
+  translate: -50% 0;
+  transition: opacity 0.2s;
+}
+
+@media (prefers-color-scheme: dark) {
+  .draw-bar-wrap {
+    --bar-top: #38383d;
+    --bar-bottom: #222225;
+    --bar-ink: #d9d9de;
+    --bar-muted: #6f6f76;
+    --bar-label: #ffffff;
+    --slider-fill: #ffffff;
+    --slider-track: rgb(255 255 255 / 0.2);
+    --bar-rule: rgb(255 255 255 / 0.12);
+    --bar-edge: rgb(255 255 255 / 0.1);
+    --bar-sheen: rgb(255 255 255 / 0.14);
+    --barrel-light: #56575e;
+    --barrel-mid: #45464c;
+    --barrel-edge: #2c2c31;
+    --tip-bg: #2c2c30;
+    --tip-fg: #ffffff;
+  }
+}
+
+.draw-bar-wrap.is-drawing {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.draw-bar {
+  box-sizing: content-box;
+  height: 76px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--bar-top), var(--bar-bottom));
+  box-shadow:
+    inset 0 1px 0 var(--bar-sheen),
+    0 0 0 1px var(--bar-edge),
+    0 18px 40px rgb(0 0 0 / 0.22),
+    0 3px 8px rgb(0 0 0 / 0.12);
+  color: var(--bar-ink);
+  overflow: hidden;
+  transition:
+    width 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+    padding 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.draw-bar.is-min {
+  padding: 0;
+}
+
+.draw-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  width: max-content;
+  animation: bar-in 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes swatch-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@keyframes bar-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+    filter: blur(3px);
+  }
+}
+
+/* Tooltip: glides between controls, width morphs, labels roll. */
+.tip-measure {
+  position: absolute;
+  visibility: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+
+.bar-tip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  height: 32px;
+  translate: -50% 4px;
+  scale: 0.96;
+  border-radius: 999px;
+  background: var(--tip-bg);
+  color: var(--tip-fg);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    left 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+    width 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.16s ease-out,
+    translate 0.2s ease-out,
+    scale 0.2s ease-out;
+}
+
+.bar-tip.is-fresh {
+  transition:
+    opacity 0.16s ease-out,
+    translate 0.2s ease-out,
+    scale 0.2s ease-out;
+}
+
+.bar-tip.is-on {
+  opacity: 1;
+  translate: -50% 0;
+  scale: 1;
+}
+
+.tip-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tip-in {
+  animation: tip-roll-in 0.34s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.tip-out {
+  animation: tip-roll-out 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.bar-tip.is-fresh .tip-in {
+  animation: none;
+}
+
+@keyframes tip-roll-in {
+  from {
+    transform: translateY(70%);
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+@keyframes tip-roll-out {
+  to {
+    transform: translateY(-70%);
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+
+.bar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bar-rule {
+  width: 1px;
+  height: 28px;
+  background: var(--bar-rule);
+  margin: 0 8px;
+}
+
+.bar-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--bar-ink);
+  cursor: pointer;
+}
+
+.bar-icon:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--bar-ink) 9%, transparent);
+}
+
+.bar-icon:disabled {
+  color: var(--bar-muted);
+  cursor: default;
+}
+
+.pen-tray {
+  display: flex;
+  align-items: flex-end;
+  height: 76px;
+  /* No clipping here: the bar already trims the barrels at its rounded edge,
+     and clipping the tray would cut the selected pen's shadow into a hard line. */
+}
+
+.pen-slot {
+  position: relative;
+  display: block;
+  width: 36px;
+  height: 76px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.pen-slot .pen-art {
+  position: absolute;
+  left: 4px;
+  top: 22px;
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.28));
+  transition:
+    translate 0.5s cubic-bezier(0.34, 1.45, 0.5, 1),
+    scale 0.15s ease-out;
+  animation: pen-in 0.5s cubic-bezier(0.34, 1.3, 0.5, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 22ms);
+}
+
+/* Pens slide up into the tray one after another when the tools come back. */
+@keyframes pen-in {
+  from {
+    translate: 0 40px;
+  }
+}
+
+.pen-slot:active .pen-art {
+  scale: 0.96;
+}
+
+.pen-slot:hover .pen-art {
+  translate: 0 -4px;
+}
+
+.pen-slot[aria-pressed='true'] .pen-art {
+  translate: 0 -18px;
+  /* A soft shadow pool around the pen in your hand, as in the samples. */
+  filter: drop-shadow(0 0 10px rgb(0 0 0 / 0.42)) drop-shadow(0 4px 4px rgb(0 0 0 / 0.28));
+}
+
+.size-dot {
+  display: block;
+  border-radius: 50%;
+  transition:
+    width 0.2s,
+    height 0.2s;
+}
+
+.colour-ring {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: conic-gradient(#e5484d, #f5a524, #f7d64a, #46a758, #3d7be0, #7a4fe0, #d2456f, #e5484d);
+}
+
+.colour-ring span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5px var(--bar-top);
+}
+
+.swatches {
+  display: flex;
+  gap: 6px;
+}
+
+.swatch {
+  animation: swatch-in 0.4s cubic-bezier(0.34, 1.4, 0.5, 1) both;
+  animation-delay: calc(var(--i, 0) * 14ms);
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.swatch:hover {
+  transform: scale(1.12);
+}
+
+.swatch[aria-checked='true']::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px var(--bar-ink);
+}
+
+.swatch.custom {
+  overflow: hidden;
+  background: conic-gradient(#e5484d, #f5a524, #f7d64a, #46a758, #3d7be0, #7a4fe0, #d2456f, #e5484d);
+}
+
+.swatch.custom input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.bar-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 170px;
+  font-size: 12px;
+  color: var(--bar-label);
+}
+
+.bar-slider span {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.bar-slider b {
+  color: var(--bar-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Slider: filled part and thumb in the bar's ink, the rest a soft grey track. */
+.bar-slider input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  margin: 0;
+  border-radius: 999px;
+  background: linear-gradient(var(--slider-fill), var(--slider-fill)) 0 / var(--fill, 50%) 100% no-repeat,
+    var(--slider-track);
+  cursor: pointer;
+}
+
+.bar-slider input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--slider-fill);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+  transition: scale 0.15s;
+}
+
+.bar-slider input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--slider-fill);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+.bar-slider input:active::-webkit-slider-thumb {
+  scale: 1.12;
+}
+
+/* The settings view ends on a slider; give it the same breathing room as the back button. */
+.draw-bar.is-settings .draw-bar-inner {
+  padding-right: 28px;
+}
+
+.disc {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.disc-pen {
+  display: block;
+  height: 84px;
+  rotate: 35deg;
+  translate: 2px 14px;
+}
+
+.pen-cursor {
+  position: absolute;
+  z-index: 4;
+  translate: -50% -50%;
+  border: 1px solid rgb(0 0 0 / 0.55);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.7);
+  pointer-events: none;
+}
+
+.pen-cursor.is-eraser {
+  border-style: dashed;
+}
+
+.preview.is-draw canvas {
+  cursor: none;
+}
+
+/* --- Panel bits for frames ------------------------------------------------ */
+
+.surface-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.surface-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.surface-card b {
+  font-weight: 600;
+}
+
+.surface-card span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.surface-card[aria-pressed='true'] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+}
+
+.button-row .button {
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .draw-bar-wrap {
+    max-width: calc(100% - 16px);
+  }
+  .draw-bar {
+    overflow-x: auto;
+  }
+}
+
+/* --- Turning the drawing ---------------------------------------------------- */
+
+.turn-control {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 6px;
+}
+
+.turn-handle {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: #0b0b0c;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 4px 14px rgb(0 0 0 / 0.25);
+  cursor: grab;
+  touch-action: none;
+  transition: scale 0.25s cubic-bezier(0.34, 1.45, 0.5, 1);
+}
+
+.turn-handle:hover {
+  scale: 1.05;
+}
+
+.is-turning .turn-handle {
+  cursor: grabbing;
+  scale: 1.08;
+}
+
+.turn-track,
+.turn-fill {
+  fill: none;
+  stroke-width: 4;
+}
+
+.turn-track {
+  stroke: rgb(255 255 255 / 0.32);
+}
+
+.turn-fill {
+  stroke: #ffffff;
+  transition: stroke-dashoffset 0.12s linear;
+}
+
+.is-turning .turn-fill {
+  transition: none;
+}
+
+.turn-readout {
+  min-width: 46px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.06);
+  color: var(--ink);
+  font: 600 12px/1 var(--font);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.is-turning .turn-readout {
+  background: var(--focus);
+  color: #fff;
+}
+
+/* While turning: a ring and crosshair through the middle of the canvas. */
+.turn-guide {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border: 1px dashed color-mix(in srgb, var(--focus) 60%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    linear-gradient(color-mix(in srgb, var(--focus) 45%, transparent), color-mix(in srgb, var(--focus) 45%, transparent)) center / 1px 100% no-repeat,
+    linear-gradient(color-mix(in srgb, var(--focus) 45%, transparent), color-mix(in srgb, var(--focus) 45%, transparent)) center / 100% 1px no-repeat;
+}
+
+/* Straight again: the ring and the readout give a small thunk. */
+.turn-handle svg.is-thunk {
+  animation: turn-thunk 0.32s cubic-bezier(0.34, 1.6, 0.5, 1);
+}
+
+@keyframes turn-thunk {
+  0% {
+    scale: 1;
+  }
+  35% {
+    scale: 0.84;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+.turn-readout.is-thunk {
+  animation: readout-thunk 0.45s ease-out;
+}
+
+@keyframes readout-thunk {
+  0% {
+    background: #ffffff;
+    color: #111;
+    scale: 1.12;
+  }
+}
+
+.turn-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px 5px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
+  color: var(--ink);
+  font: 600 12px/1 var(--font);
+  cursor: pointer;
+  animation: reset-in 0.25s cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+
+.turn-reset:hover {
+  background: var(--surface);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.16);
+}
+
+@keyframes reset-in {
+  from {
+    opacity: 0;
+    translate: 6px 0;
+  }
 }
