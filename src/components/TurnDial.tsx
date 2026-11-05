@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Icon } from './controls'
 
 /** Degrees per pixel of sideways drag: about 120 px takes you from 0° to 180°. */
 const SPEED = 1.5
@@ -144,10 +145,7 @@ export function TurnDial({
       </output>
       {value !== 0 && !turning && (
         <button type="button" className="turn-reset" onClick={reset} title="Back to 0°">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 12a8 8 0 1 0 2.3-5.6" />
-            <path d="M4 4v4.5h4.5" />
-          </svg>
+          <Icon name="undo" size={14} />
           Reset
         </button>
       )}

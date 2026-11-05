@@ -1910,3 +1910,20 @@ button {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* Iconoir icons in the zoom pill sit centred like the label between them. */
+.zoom-pill button {
+  display: inline-grid;
+  place-items: center;
+}
+
+.zoom-pill button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* The order list's drag handle: Iconoir's vertical dots, kept small beside the shape. */
+.order-list li .grip svg {
+  width: 14px;
+  height: 14px;
+}

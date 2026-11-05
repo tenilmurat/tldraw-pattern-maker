@@ -258,7 +258,7 @@ export function Preview({
       {!(state.mode === 'paper' && state.paper.kind === 'blank') && (
       <div className="zoom-pill" role="group" aria-label="Zoom">
         <button type="button" onClick={() => pan.zoomAt(view.w / 2, view.h / 2, 1 / 1.25)} aria-label="Zoom out">
-          −
+          {Icons.minus}
         </button>
         <button
           type="button"
@@ -270,7 +270,7 @@ export function Preview({
           {zoomShare}%
         </button>
         <button type="button" onClick={() => pan.zoomAt(view.w / 2, view.h / 2, 1.25)} aria-label="Zoom in">
-          +
+          {Icons.plus}
         </button>
       </div>
       )}

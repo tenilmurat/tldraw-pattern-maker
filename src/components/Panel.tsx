@@ -34,7 +34,7 @@ export function Panel({
       {/* Always in reach at the foot of the panel, whatever the mode. */}
       <footer className="panel-foot">
         <button type="button" className="button wide" onClick={() => dispatch({ type: 'surprise' })}>
-          {Icons.dice}
+          {Icons.refresh}
           Surprise me
         </button>
       </footer>

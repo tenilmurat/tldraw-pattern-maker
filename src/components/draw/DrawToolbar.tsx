@@ -18,24 +18,9 @@ import { PenArt } from './PenArt'
 
 type View = 'tools' | 'colours' | 'settings' | 'min'
 
-const chevron = (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="m14.5 6-6 6 6 6" />
-  </svg>
-)
-const cursorIcon = (
-  <svg viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true">
-    <path d="M168,132.69,214.08,115l.33-.13A16,16,0,0,0,213,85.07L52.92,32.8A15.95,15.95,0,0,0,32.8,52.92L85.07,213a15.82,15.82,0,0,0,14.41,11l.78,0a15.84,15.84,0,0,0,14.61-9.59l.13-.33L132.69,168,184,219.31a16,16,0,0,0,22.63,0l12.68-12.68a16,16,0,0,0,0-22.63ZM195.31,208,144,156.69a16,16,0,0,0-26,4.93c0,.11-.09.22-.13.32l-17.65,46L48,48l159.85,52.2-45.95,17.64-.32.13a16,16,0,0,0-4.93,26h0L208,195.31Z" />
-  </svg>
-)
 /** "light-violet" → "Light violet". */
 const colourName = (c: string) => c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')
 
-const shrink = (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M4 14h6v6M20 10h-6V4M10 14l-6 6M14 10l6-6" />
-  </svg>
-)
 
 /**
  * The drawing bar. It changes shape instead of opening panels: the pens
@@ -240,7 +225,7 @@ export function DrawToolbar({
                 onClick={() => editor.setCurrentTool('select')}
                 data-tip="Select"
               >
-                {cursorIcon}
+                {Icons.cursor}
                 <span className="sr-only">Select, move and resize</span>
               </button>
             )}
@@ -282,7 +267,7 @@ export function DrawToolbar({
             </div>
             <span className="bar-rule" />
             <button type="button" className="bar-icon" onClick={() => setView('min')} data-tip="Hide tools">
-              {shrink}
+              {Icons.collapse}
               <span className="sr-only">Hide tools</span>
             </button>
           </>
@@ -291,7 +276,7 @@ export function DrawToolbar({
         {view === 'colours' && (
           <>
             <button type="button" className="bar-icon" onClick={() => setView('tools')} data-tip="Back">
-              {chevron}
+              {Icons.back}
               <span className="sr-only">Back to tools</span>
             </button>
             <span className="bar-rule" />
@@ -369,7 +354,7 @@ export function DrawToolbar({
         {view === 'settings' && (
           <>
             <button type="button" className="bar-icon" onClick={() => setView('tools')} data-tip="Back">
-              {chevron}
+              {Icons.back}
               <span className="sr-only">Back to tools</span>
             </button>
             <span className="bar-rule" />
