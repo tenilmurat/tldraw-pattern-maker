@@ -37,8 +37,6 @@ export interface PenDef {
   grain?: boolean
   /** Rubs out instead of adding. */
   erase?: boolean
-  /** Keeps its own colour instead of sharing the ink (highlighter). */
-  ownInk?: boolean
   /** How much the line lags behind the pointer to smooth out shake (0..1). */
   streamline: number
 }
@@ -48,7 +46,7 @@ export const PENS: PenDef[] = [
   { id: 'pen', name: 'Pen', size: 5, thinning: 0.45, minWidth: 0.5, taper: [1.5, 3], cap: 'round', opacity: 1, streamline: 0.35 },
   { id: 'fineliner', name: 'Fineliner', size: 2.5, thinning: 0, minWidth: 1, taper: [0, 0], cap: 'round', opacity: 1, streamline: 0.3 },
   { id: 'marker', name: 'Marker', size: 12, thinning: 0, minWidth: 1, taper: [0, 0], cap: 'round', opacity: 1, streamline: 0.4 },
-  { id: 'highlighter', name: 'Highlighter', size: 22, thinning: 0, minWidth: 1, taper: [0, 0], cap: 'flat', opacity: 0.45, ownInk: true, streamline: 0.5 },
+  { id: 'highlighter', name: 'Highlighter', size: 22, thinning: 0, minWidth: 1, taper: [0, 0], cap: 'flat', opacity: 0.45, streamline: 0.5 },
   { id: 'brush', name: 'Brush', size: 16, thinning: 0.7, minWidth: 0.3, taper: [2.5, 5], cap: 'round', opacity: 1, streamline: 0.4 },
   { id: 'fountain', name: 'Fountain Pen', size: 9, thinning: 0, minWidth: 1, taper: [0, 0], cap: 'flat', opacity: 1, nib: 45, streamline: 0.35 },
   { id: 'eraser', name: 'Eraser', size: 24, thinning: 0, minWidth: 1, taper: [0, 0], cap: 'round', opacity: 1, erase: true, streamline: 0.2 },
@@ -64,7 +62,6 @@ export const SWATCHES = [
   '#4b56e2', '#7a4fe0', '#b04bc9', '#d2456f',
 ]
 
-export const DEFAULT_HIGHLIGHT = '#f7d64a'
 
 /**
  * Width factor for the next point, from how fast the pointer moved.

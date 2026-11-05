@@ -93,7 +93,7 @@ export function DrawToolbar({
 
   const innerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState<number | undefined>(undefined)
-  const { pen, ink, highlight, sizes, opacities, past, future, strokes } = state.draw
+  const { pen, ink, sizes, opacities, past, future, strokes } = state.draw
   const current = PEN[pen]
 
   // In the frame, everything comes from tldraw: its tool, colour, size, opacity and history.
@@ -114,8 +114,8 @@ export function DrawToolbar({
       },
     [editor],
   )
-  const colour = editor && tl ? colourValue(editor, tl.colour) : current.ownInk ? highlight : ink
-  const inkFor = (id: keyof typeof PEN) => (editor ? colour : PEN[id].ownInk ? highlight : ink)
+  // Every pen, the highlighter too, shows the colour you picked.
+  const colour = editor && tl ? colourValue(editor, tl.colour) : ink
   const selecting = !!tl && tl.tool === 'select'
   const sizeIndex = tl ? TL_SIZES.indexOf(tl.size) : 0
   const opacity = tl ? tl.opacity : opacities[pen]
@@ -136,7 +136,8 @@ export function DrawToolbar({
   useLayoutEffect(() => {
     const el = innerRef.current
     if (!el) return
-    const measure = () => setWidth(el.scrollWidth)
+    // The laid-out width, not scrollWidth: the rolled-up pen reaches past its circle on purpose.
+    const measure = () => setWidth(el.offsetWidth)
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
@@ -198,9 +199,19 @@ export function DrawToolbar({
       <div className="draw-bar-inner" ref={innerRef} key={view}>
         {view === 'min' && (
           <button type="button" className="disc" onClick={() => setView('tools')} data-tip="Show tools">
-            <span className="disc-pen">
-              <PenArt pen={pen} ink={colour} />
+            {/* The pen drawn twice: once inside the circle (hiding the end of the barrel),
+                once on the nib's side only, so the tip reaches out past the edge. */}
+            <span className="disc-layer is-inside" aria-hidden="true">
+              <span className="disc-pen">
+                <PenArt pen={pen} ink={colour} />
+              </span>
             </span>
+            <span className="disc-layer is-tip" aria-hidden="true">
+              <span className="disc-pen">
+                <PenArt pen={pen} ink={colour} />
+              </span>
+            </span>
+            <span className="sr-only">Show tools</span>
           </button>
         )}
 
@@ -244,7 +255,7 @@ export function DrawToolbar({
                   data-tip={p.name}
                   onClick={() => choosePen(p.id)}
                 >
-                  <PenArt pen={p.id} ink={inkFor(p.id)} />
+                  <PenArt pen={p.id} ink={colour} />
                   <span className="sr-only">{p.name}</span>
                 </button>
               ))}

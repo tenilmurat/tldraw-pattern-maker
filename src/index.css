@@ -161,7 +161,7 @@ button {
 
 .brand img {
   display: block;
-  height: 20px;
+  height: 28px;
   width: auto;
 }
 
@@ -194,9 +194,10 @@ button {
   color: var(--text);
 }
 
-.mode[aria-pressed='true'] {
-  background: var(--info-subtle);
-  color: var(--text-info);
+.mode[aria-pressed='true'],
+.mode[aria-pressed='true']:hover {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .actions {
@@ -333,10 +334,16 @@ button {
   background: var(--surface-hover);
 }
 
+/* Chosen: solid blue with the shape in white. */
 .motif-toggle[aria-pressed='true'] {
-  background: var(--info-subtle);
-  border: 1.5px solid var(--accent);
-  color: var(--text-info) !important;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent) !important;
+}
+
+.motif-toggle[aria-pressed='true']:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .motif-toggle:active {
@@ -981,11 +988,15 @@ button {
   overflow: hidden;
   transition:
     width 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.45s cubic-bezier(0.32, 0.72, 0, 1),
     padding 0.45s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* Rolled up: a smaller circle, and the pen big enough to reach out of it. */
 .draw-bar.is-min {
+  height: 56px;
   padding: 0;
+  overflow: visible;
 }
 
 .draw-bar-inner {
@@ -1317,23 +1328,63 @@ button {
 }
 
 .disc {
-  display: grid;
-  place-items: center;
-  width: 76px;
-  height: 76px;
+  position: relative;
+  display: block;
+  width: 56px;
+  height: 56px;
   padding: 0;
   border: 0;
   border-radius: 50%;
   background: none;
   cursor: pointer;
+  overflow: visible;
+}
+
+.disc-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Inside the circle: hides the end of the barrel. */
+.disc-layer.is-inside {
+  border-radius: 50%;
   overflow: hidden;
 }
 
+/*
+ * Beyond the circle, only on the nib's side: everything past the line through
+ * the middle, square to the pen (which leans 35° to the right).
+ */
+.disc-layer.is-tip {
+  clip-path: polygon(192px 143px, 307px -21px, -21px -251px, -136px -87px);
+}
+
 .disc-pen {
+  position: absolute;
+  left: 50%;
+  top: 50%;
   display: block;
-  height: 84px;
+  width: 40px;
+  height: 120px;
+  margin: -60px 0 0 -20px;
   rotate: 35deg;
-  translate: 2px 14px;
+  /* Out along the pen's own angle, so the nib and cone reach well past the circle. */
+  translate: 6px -8px;
+}
+
+.disc-pen .pen-art {
+  width: 40px;
+  height: 120px;
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.3));
+}
+
+.disc:hover .disc-pen {
+  scale: 1.04;
+}
+
+.disc-pen {
+  transition: scale 0.3s cubic-bezier(0.34, 1.45, 0.5, 1);
 }
 
 .pen-cursor {
@@ -1640,9 +1691,11 @@ button {
   margin-right: 4px;
 }
 
-.bar-icon.select-tool[aria-pressed='true'] {
-  background: var(--bar-ink);
-  color: var(--bar-bg, #1c1c1e);
+.bar-icon.select-tool[aria-pressed='true'],
+.bar-icon.select-tool[aria-pressed='true']:hover {
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 /* --- Photo turn: play and MP4 ---------------------------------------------- */
@@ -1657,8 +1710,12 @@ button {
 }
 
 .turn-actions .button[aria-pressed='true'] {
-  background: var(--info-subtle);
-  color: var(--text-info);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.turn-actions .button[aria-pressed='true']:hover {
+  background: var(--accent-hover);
 }
 
 .button.square {
@@ -1812,4 +1869,10 @@ button {
 .work-frame.is-collapsed {
   visibility: hidden;
   pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .brand img {
+    height: 22px;
+  }
 }

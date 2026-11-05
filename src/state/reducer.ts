@@ -1,7 +1,7 @@
 import { harmoniousPalette, PALETTES, WHITE, type Palette } from '../engine/color'
 import { starterStrokes } from '../engine/draw'
 import { MOTIFS } from '../engine/motifs'
-import { DEFAULT_HIGHLIGHT, PEN, PENS, type PenId } from '../engine/pens'
+import { PENS, type PenId } from '../engine/pens'
 import { PAPERS } from '../engine/paper'
 import { between, createRand, newId, newSeed, pick, shuffled } from '../engine/random'
 import { LAYOUTS, scatterStamps } from '../engine/shapes'
@@ -44,7 +44,6 @@ export const initialState: PatternState = {
     sizes: Object.fromEntries(PENS.map((p) => [p.id, p.size])) as Record<PenId, number>,
     opacities: Object.fromEntries(PENS.map((p) => [p.id, p.opacity])) as Record<PenId, number>,
     ink: '#151515',
-    highlight: DEFAULT_HIGHLIGHT,
   },
   photo: {
     symmetry: 'kaleido',
@@ -371,16 +370,8 @@ export function reducer(state: PatternState, action: Action): PatternState {
       return { ...state, draw: { ...state.draw, opacities: { ...opacities, [pen]: clamp(action.value, 0.1, 1) } } }
     }
     case 'inkColour':
-      // A colour choice reaches every pen. The highlighter keeps its own colour
-      // unless it's the pen in your hand, so a yellow highlighter survives a black pen.
-      return {
-        ...state,
-        draw: {
-          ...state.draw,
-          ink: action.colour,
-          highlight: PEN[state.draw.pen].ownInk ? action.colour : state.draw.highlight,
-        },
-      }
+      // One colour for every pen, the highlighter included.
+      return { ...state, draw: { ...state.draw, ink: action.colour } }
 
     case 'photoSymmetry':
       return { ...state, photo: { ...state.photo, symmetry: action.symmetry } }

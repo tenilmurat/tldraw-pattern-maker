@@ -54,7 +54,7 @@ export function TopBar({
   return (
     <header className="header">
       <div className="brand">
-        <img src={logo} alt="tldraw pattern" width={101} height={20} />
+        <img src={logo} alt="tldraw pattern" width={142} height={28} />
       </div>
 
       <nav className="modes" aria-label="What to make a pattern from">

@@ -102,9 +102,8 @@ export interface PatternState {
     sizes: Record<PenId, number>
     /** Per pen, 0.1..1. */
     opacities: Record<PenId, number>
-    /** Shared ink for every pen except the highlighter. */
+    /** Shared ink for every pen, the highlighter too. */
     ink: string
-    highlight: string
   }
   photo: {
     symmetry: SymmetryId

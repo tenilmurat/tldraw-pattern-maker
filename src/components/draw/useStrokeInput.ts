@@ -95,7 +95,7 @@ export function useStrokeInput({
         pen: pen.id,
         points: [[ux, uy, 0.8]],
         size: state.draw.sizes[pen.id] / unitPx,
-        colour: pen.ownInk ? state.draw.highlight : state.draw.ink,
+        colour: state.draw.ink,
         opacity: state.draw.opacities[pen.id],
       },
       last: p,
