@@ -16,7 +16,8 @@ So Shapes is the baseline that meets the brief, and it's what you see first. Ske
 4. **Draw.** Sketch in the square with the tldraw pens. The pattern behind it updates as you draw, mirrored or spun however you choose.
 5. **Photo.** Drop in your own photo (or keep the sample), move the slice around it, and pick Kaleido, Mirror, Honeycomb or Triangles.
 6. **Video.** In Photo, the MP4 button saves one full turn as a short video that loops.
-7. **Download.** Save a picture: one tile that repeats, square for posts, wide for screens, or A4 at true size for printing.
+7. **Paper.** Pick a printable paper (Dots, Squares, Graph, Lines, Music, Triangles, Crosses or Gingham), set the Spacing in millimetres and how fine or bold the Lines are, and choose its colours.
+8. **Download.** Save a picture: one tile that repeats, square for posts, wide for screens, or A4 at true size for printing.
 
 ## Decisions I made
 
