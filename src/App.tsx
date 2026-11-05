@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Panel } from './components/Panel'
 import { Preview } from './components/Preview'
 import { TopBar } from './components/TopBar'
@@ -50,6 +50,13 @@ const App = () => {
   }, [state.photo.src])
 
   const photo = userPhoto && userPhoto.src === state.photo.src ? userPhoto.image : sample
+
+  // First load: the page arrives in a gentle cascade as the welcome fades, once.
+  const [arriving, setArriving] = useState(false)
+  const arrive = useCallback(() => {
+    setArriving(true)
+    window.setTimeout(() => setArriving(false), 1800)
+  }, [])
   // A picture of the drawing in the tldraw frame. Not saved: tldraw keeps the drawing itself.
   const [art, setArt] = useState<DrawArt | null>(null)
   const renderer = useMemo(() => createRenderer(state, photo, art), [state, photo, art])
@@ -105,11 +112,11 @@ const App = () => {
   }, [])
 
   return (
-    <main className="app">
+    <main className={`app ${arriving ? 'is-arriving' : ''}`}>
       <Preview renderer={renderer} state={state} dispatch={dispatch} art={art} onArt={setArt} />
       <TopBar state={state} dispatch={dispatch} renderer={renderer} />
       <Panel state={state} dispatch={dispatch} photo={photo} art={art} />
-      <Welcome />
+      <Welcome onLeave={arrive} />
     </main>
   )
 }

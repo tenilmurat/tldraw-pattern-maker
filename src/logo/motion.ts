@@ -87,7 +87,7 @@ const mixColour = (a: string, b: string, v: number) => {
  * The inside of the stage SVG at time `t` (seconds): the dot field and the
  * lockup. At `t >= SETTLED` it is exactly the static logo.
  */
-export function welcomeFrame(t: number, paths: LogoPaths): string {
+export function welcomeFrame(t: number, paths: LogoPaths, opts: { dotReady?: boolean } = {}): string {
   const parts: string[] = []
 
   // 1. The pattern: dots bloom outward from the centre, then settle away.
@@ -117,7 +117,8 @@ export function welcomeFrame(t: number, paths: LogoPaths): string {
 
   // 3. The mark: the dot first, then the square, dot and tail arrive together on one beat; then it slides home.
   const shift = START_SHIFT * (1 - easeInOut(span(t, 1.55, 2.35)))
-  const dotScale = easeOut(span(t, 0, 0.55))
+  // The dot grows in first, unless it's already there (the welcome waited on it for a click).
+  const dotScale = opts.dotReady ? 1 : easeOut(span(t, 0, 0.55))
   // The square grows in fast, lands a touch big right on the beat, and settles.
   const grow = easeOut(span(t, MARK_AT - 0.2, MARK_AT))
   const settle = easeInOut(span(t, MARK_AT, MARK_AT + 0.3))
@@ -136,10 +137,59 @@ export function welcomeFrame(t: number, paths: LogoPaths): string {
   return parts.join('')
 }
 
+/** When the dots begin to bloom: a welcome waiting for a click holds just before this, on the dot alone. */
+export const BLOOM_AT = 0.15
+
+/**
+ * Waiting for a click: the black dot alone in the middle, breathing, with
+ * soft rings pulsing out of it. A click carries the motion on from BLOOM_AT.
+ */
+export function waitingFrame(paths: LogoPaths): string {
+  const cx = DOT.x + START_SHIFT
+  const ring = (delay: number) =>
+    `<circle class="welcome-pulse" cx="${f(cx)}" cy="${DOT.y}" r="5.8" fill="${INK}" style="animation-delay:${delay}s"/>`
+  // The second ring starts halfway through the first, so they stay evenly spaced.
+  return `${ring(0)}${ring(1.6)}<g transform="translate(${f(START_SHIFT)} 0)"><path class="welcome-breathe" d="${paths.dot}" fill="${INK}"/></g>`
+}
+
 /** A whole stage SVG, for the video (and anything else that wants a file). */
 export function welcomeSvg(t: number, paths: LogoPaths, size?: { width: number; height: number; background?: string }) {
   const { x, y, w, h } = STAGE
   const dims = size ? ` width="${size.width}" height="${size.height}"` : ''
   const bg = size?.background ? `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${size.background}"/>` : ''
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}"${dims} preserveAspectRatio="xMidYMid slice">${bg}${welcomeFrame(t, paths)}</svg>`
+}
+
+/**
+ * The header logo's replay, when you hover it: the mark stays exactly where
+ * it is, and only the words play again. "tldraw" and "pattern" fade out
+ * quickly, then wipe back in the way they arrive in the welcome. At
+ * `t >= REPLAY_LENGTH` it is exactly the static logo.
+ */
+export const REPLAY_LENGTH = 1.0
+
+export function replayFrame(t: number, paths: LogoPaths): string {
+  const parts: string[] = []
+  // The words dissolve first, then come back one after the other.
+  const gone = easeInOut(span(t, 0, 0.15))
+  const back = t >= 0.15
+  const word = (d: string, v: number, x0: number, x1: number, dx: number, dy: number, id: string) => {
+    const wipe = back ? v : 1
+    const opacity = back ? v : 1 - gone
+    if (opacity <= 0 || wipe <= 0) return
+    const shift = back ? 1 - v : 0
+    parts.push(
+      `<clipPath id="${id}"><rect x="${x0}" y="-10" width="${f((x1 - x0) * wipe)}" height="120"/></clipPath>`,
+      `<g clip-path="url(#${id})"><path d="${d}" fill="${INK}" fill-rule="evenodd" fill-opacity="${f(opacity)}" transform="translate(${f(dx * shift)} ${f(dy * shift)})"/></g>`,
+    )
+  }
+  word(paths.tldraw, easeOut(span(t, 0.2, 0.65)), LOGO.tldraw[0], LOGO.tldraw[1], -10, 0, 'replay-tldraw')
+  word(paths.pattern, easeOut(span(t, 0.4, 0.95)), LOGO.pattern[0], LOGO.pattern[1], 0, 6, 'replay-pattern')
+  // The mark stays as it is.
+  parts.push(
+    `<path d="${paths.bg}" fill="${INK}"/>`,
+    `<path d="${paths.tail}" fill="#ffffff" fill-rule="evenodd"/>`,
+    `<path d="${paths.dot}" fill="#ffffff"/>`,
+  )
+  return parts.join('')
 }

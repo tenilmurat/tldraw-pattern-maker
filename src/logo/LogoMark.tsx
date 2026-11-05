@@ -1,46 +1,53 @@
-import type { CSSProperties } from 'react'
+import { useRef } from 'react'
 import raw from '../assets/logo.svg?raw'
-import { INK, LOGO, parseLogo } from './motion'
+import { LOGO, parseLogo, REPLAY_LENGTH, replayFrame } from './motion'
 
 const PATHS = parseLogo(raw)
+const STILL = replayFrame(REPLAY_LENGTH, PATHS)
 
-/** A small grid of dots inside the square, for the ripple. Each knows its place in the wave. */
-const RIPPLE: { x: number; y: number; k: number }[] = []
-const STEP = LOGO.square.w / 6
-for (let j = 0; j < 6; j++) for (let i = 0; i < 6; i++) RIPPLE.push({ x: STEP * (i + 0.5), y: (LOGO.square.h / 6) * (j + 0.5), k: i + j })
+const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/** Play the replay into `svg`, frame by frame, then leave the still logo. */
+function replay(svg: SVGSVGElement, done: () => void) {
+  const start = performance.now()
+  const step = (now: number) => {
+    const t = (now - start) / 1000
+    svg.innerHTML = replayFrame(Math.min(t, REPLAY_LENGTH), PATHS)
+    if (t < REPLAY_LENGTH) requestAnimationFrame(step)
+    else done()
+  }
+  requestAnimationFrame(step)
+}
 
 /**
- * The header logo. On hover a little pattern ripples across the square,
- * corner to corner, and the semicolon gives a small nod: the same idea as
- * the welcome motion, quiet enough for a header.
+ * The header logo. Hover it and the words play again: the mark stays put
+ * while "tldraw" and "pattern" fade out and wipe back in, as they do in the
+ * welcome. It plays once per hover and never interrupts itself.
  */
 export function LogoMark({ height = 24 }: { height?: number }) {
+  const ref = useRef<SVGSVGElement>(null)
+  const playing = useRef(false)
+
+  const onEnter = () => {
+    const svg = ref.current
+    if (!svg || playing.current || reducedMotion()) return
+    playing.current = true
+    replay(svg, () => {
+      playing.current = false
+    })
+  }
+
   return (
     <svg
+      ref={ref}
       className="logo-mark"
       viewBox={`0 0 ${LOGO.w} ${LOGO.h}`}
       height={height}
       width={(height * LOGO.w) / LOGO.h}
       role="img"
       aria-label="tldraw pattern"
-    >
-      <defs>
-        <clipPath id="logo-square">
-          <path d={PATHS.bg} />
-        </clipPath>
-      </defs>
-      <path d={PATHS.bg} fill={INK} />
-      <g clipPath="url(#logo-square)" className="logo-ripple">
-        {RIPPLE.map((d) => (
-          <circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={1.6} fill="#fff" style={{ '--k': d.k } as CSSProperties} />
-        ))}
-      </g>
-      <g className="logo-semicolon">
-        <path d={PATHS.dot} fill="#fff" />
-        <path d={PATHS.tail} fill="#fff" fillRule="evenodd" />
-      </g>
-      <path d={PATHS.tldraw} fill={INK} fillRule="evenodd" />
-      <path className="logo-word" d={PATHS.pattern} fill={INK} fillRule="evenodd" />
-    </svg>
+      onPointerEnter={onEnter}
+      dangerouslySetInnerHTML={{ __html: STILL }}
+    />
   )
 }

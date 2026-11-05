@@ -1953,77 +1953,167 @@ button {
   height: 100%;
 }
 
-/* Header logo on hover: a little pattern ripples across the square, the semicolon nods. */
-.logo-ripple circle {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
+/* The header logo: on hover its words play again. */
+.brand .logo-mark {
+  cursor: default;
 }
 
-.logo-semicolon,
-.logo-word {
-  transform-box: fill-box;
-  transform-origin: center;
+/* --- First load ---------------------------------------------------------------
+ * As the welcome fades, the page arrives in a gentle cascade: the header
+ * settles, the panel glides in and its sections rise one after another, the
+ * frame and controls follow, and the pattern fades up behind. Once only.
+ */
+.app.is-arriving .preview canvas {
+  animation: arrive-fade 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.brand:hover .logo-ripple circle {
-  animation: logo-ripple 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--k) * 45ms);
+.app.is-arriving .header {
+  animation: arrive-down 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.brand:hover .logo-semicolon {
-  animation: logo-nod 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+.app.is-arriving .panel {
+  animation: arrive-left 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
 }
 
-.brand:hover .logo-word {
-  animation: logo-drift 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+.app.is-arriving .panel-body > *,
+.app.is-arriving .panel-foot {
+  animation: arrive-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes logo-ripple {
-  0% {
+.app.is-arriving .panel-body > :nth-child(1) { animation-delay: 0.18s; }
+.app.is-arriving .panel-body > :nth-child(2) { animation-delay: 0.24s; }
+.app.is-arriving .panel-body > :nth-child(3) { animation-delay: 0.3s; }
+.app.is-arriving .panel-body > :nth-child(4) { animation-delay: 0.36s; }
+.app.is-arriving .panel-body > :nth-child(5) { animation-delay: 0.42s; }
+.app.is-arriving .panel-body > :nth-child(n + 6) { animation-delay: 0.48s; }
+.app.is-arriving .panel-foot { animation-delay: 0.5s; }
+
+.app.is-arriving .work-frame:not(.is-collapsed) {
+  animation: arrive-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.14s both;
+}
+
+.app.is-arriving .draw-bar,
+.app.is-arriving .zoom-pill,
+.app.is-arriving .show-frame {
+  animation: arrive-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+
+@keyframes arrive-fade {
+  from {
     opacity: 0;
-    scale: 0.3;
   }
-  35% {
-    opacity: 0.55;
-    scale: 1;
-  }
-  100% {
+}
+
+@keyframes arrive-down {
+  from {
     opacity: 0;
-    scale: 0.5;
+    translate: 0 -8px;
   }
 }
 
-@keyframes logo-nod {
-  0%,
-  100% {
-    translate: 0 0;
-    scale: 1;
-  }
-  30% {
-    translate: 0 1.5px;
-    scale: 0.94;
-  }
-  60% {
-    translate: 0 -0.75px;
-    scale: 1.02;
+@keyframes arrive-left {
+  from {
+    opacity: 0;
+    translate: 24px 0;
   }
 }
 
-@keyframes logo-drift {
-  0%,
-  100% {
-    translate: 0 0;
+@keyframes arrive-up {
+  from {
+    opacity: 0;
+    translate: 0 10px;
   }
-  40% {
-    translate: 3px 0;
+}
+
+@keyframes arrive-grow {
+  from {
+    opacity: 0;
+    scale: 0.98;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .brand:hover .logo-ripple circle,
-  .brand:hover .logo-semicolon,
-  .brand:hover .logo-word {
-    animation: none;
+  .app.is-arriving * {
+    animation: none !important;
+  }
+}
+
+/* --- Waiting for a click --------------------------------------------------------
+ * Browsers only allow sound after a click, so when they block it the welcome
+ * waits on the black dot: it breathes, soft rings pulse out of it, and a
+ * small line below shimmers.
+ */
+.welcome-pulse {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: welcome-pulse 3.2s cubic-bezier(0.33, 0, 0.2, 1) infinite;
+}
+
+.welcome-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: welcome-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes welcome-pulse {
+  0% {
+    opacity: 0.14;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 3;
+  }
+}
+
+@keyframes welcome-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.05;
+  }
+}
+
+/* The shimmer: soft grey text with a darker sheen sweeping across it, then a rest. */
+.welcome-ask {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 18px);
+  translate: -50% 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  color: transparent;
+  background: linear-gradient(90deg, #a3a3a3 0%, #a3a3a3 40%, #2a2a2a 50%, #a3a3a3 60%, #a3a3a3 100%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation:
+    welcome-ask-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both,
+    welcome-shimmer 3s linear 0.8s infinite;
+}
+
+@keyframes welcome-ask-in {
+  from {
+    opacity: 0;
+    translate: -50% 4px;
+  }
+}
+
+/* 1.5s sweep, then 1.5s rest. */
+@keyframes welcome-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  50%,
+  100% {
+    background-position: 0% 0;
   }
 }
