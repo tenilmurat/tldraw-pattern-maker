@@ -1434,8 +1434,19 @@ button {
 }
 
 .surface-card[aria-pressed='true'] {
-  border-color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--ink);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.surface-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 4px;
+  color: var(--muted);
+}
+
+.surface-card[aria-pressed='true'] .surface-icon {
+  color: var(--accent);
 }
 
 .button-row {
@@ -1875,4 +1886,27 @@ button {
   .brand img {
     height: 22px;
   }
+}
+
+/* "Any colour": a rainbow ring around the colour you picked (or a full rainbow until you pick one). */
+.ink.paper-picker {
+  position: relative;
+  display: block;
+  background:
+    radial-gradient(circle, var(--own, transparent) 0 52%, transparent 54%),
+    conic-gradient(#e5484d, #f5a524, #f7d64a, #46a758, #3d7be0, #7a4fe0, #d2456f, #e5484d);
+}
+
+.ink.paper-picker input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ink.paper-picker:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

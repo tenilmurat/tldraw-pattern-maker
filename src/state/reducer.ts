@@ -156,7 +156,8 @@ function surprise(state: PatternState): PatternState {
         },
       }
     case 'paper': {
-      const paper = pick(rand, PAPERS)
+      // A surprise is always something printed; plain paper is there to choose yourself.
+      const paper = pick(rand, PAPERS.filter((p) => p.id !== 'blank'))
       return withPalette(
         { ...state, seed, paper: { ...state.paper, kind: paper.id, spacingMm: paper.defaultMm } },
         palette,

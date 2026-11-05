@@ -89,6 +89,7 @@ function drawArt(ctx: CanvasRenderingContext2D, art: DrawArt, symmetry: Symmetry
       ctx.scale(T, T)
       ctx.translate(ox, oy)
       ctx.transform(...op)
+      ctx.imageSmoothingQuality = 'high'
       ctx.drawImage(art.image, minX, minY, maxX - minX, maxY - minY)
       ctx.restore()
     }

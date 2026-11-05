@@ -69,6 +69,7 @@ export function tileRenderer(
     tileAt,
     paint(ctx, x, y, w, h, k) {
       const tile = tileAt(k)
+      ctx.imageSmoothingQuality = 'high'
       const pattern = ctx.createPattern(tile, 'repeat')
       if (!pattern) return
       pattern.setTransform(new DOMMatrix([tileW / tile.width, 0, 0, tileH / tile.height, 0, 0]))

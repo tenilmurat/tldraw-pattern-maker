@@ -28,6 +28,7 @@ export interface Arrangement {
 export type DrawSurface = 'frame' | 'pattern'
 
 export type PaperKind =
+  | 'blank'
   | 'dots'
   | 'grid'
   | 'graph'

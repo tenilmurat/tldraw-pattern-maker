@@ -5,7 +5,13 @@ import type { PatternState } from '../state/types'
 import { OptionCard, Section, Slider } from './controls'
 import { MiniPattern } from './MiniPattern'
 
-export function PaperPanel({ state, dispatch }: { state: PatternState; dispatch: Dispatch<Action> }) {
+export function PaperPanel({
+  state,
+  dispatch,
+}: {
+  state: PatternState
+  dispatch: Dispatch<Action>
+}) {
   const { kind, spacingMm, weight } = state.paper
   const palette = state.modePalettes.paper
 
@@ -39,25 +45,31 @@ export function PaperPanel({ state, dispatch }: { state: PatternState; dispatch:
       </Section>
 
       <Section title="Look">
-        <Slider
-          label="Spacing"
-          low="Tighter"
-          high="Roomier"
-          min={2}
-          max={15}
-          step={0.1}
-          value={spacingMm}
-          readout={`${spacingMm.toFixed(1)} mm${named ? ` · ${named}` : ''}`}
-          onChange={(mm) => dispatch({ type: 'spacing', mm })}
-        />
-        <Slider
-          label="Lines"
-          low="Fine"
-          high="Bold"
-          value={weight}
-          onChange={(value) => dispatch({ type: 'weight', value })}
-        />
-        <p className="note">Sizes are true to life when you download the A4 print.</p>
+        {kind === 'blank' ? (
+          <p className="note">A plain sheet with nothing printed on it. Choose its colour below.</p>
+        ) : (
+          <>
+            <Slider
+              label="Spacing"
+              low="Tighter"
+              high="Roomier"
+              min={2}
+              max={15}
+              step={0.1}
+              value={spacingMm}
+              readout={`${spacingMm.toFixed(1)} mm${named ? ` · ${named}` : ''}`}
+              onChange={(mm) => dispatch({ type: 'spacing', mm })}
+            />
+            <Slider
+              label="Lines"
+              low="Fine"
+              high="Bold"
+              value={weight}
+              onChange={(value) => dispatch({ type: 'weight', value })}
+            />
+            <p className="note">Sizes are true to life when you download the A4 print.</p>
+          </>
+        )}
       </Section>
     </>
   )

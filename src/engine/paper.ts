@@ -14,6 +14,7 @@ export interface PaperInfo {
 }
 
 export const PAPERS: PaperInfo[] = [
+  { id: 'blank', name: 'Blank', hint: 'A plain sheet, like A4 printer paper', defaultMm: 5 },
   { id: 'dots', name: 'Dots', hint: 'Bullet-journal dot grid', defaultMm: 5 },
   { id: 'grid', name: 'Squares', hint: 'Maths-book squares', defaultMm: 5 },
   { id: 'graph', name: 'Graph', hint: 'Fine squares, bold every fifth', defaultMm: 2 },
@@ -50,6 +51,7 @@ export function createPaperRenderer(o: PaperOptions): Renderer {
   const row = (s * Math.sqrt(3)) / 2
 
   const tile: Record<PaperKind, [number, number]> = {
+    blank: [s, s],
     dots: [s, s],
     grid: [s, s],
     graph: [s * 5, s * 5],
@@ -82,6 +84,9 @@ export function createPaperRenderer(o: PaperOptions): Renderer {
       }
 
       switch (o.kind) {
+        case 'blank':
+          // Nothing printed on it: just the paper.
+          break
         case 'dots':
           for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) dot(i * s, j * s, lw * 0.9)
           break

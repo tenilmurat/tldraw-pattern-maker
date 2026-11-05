@@ -254,6 +254,8 @@ export function Preview({
         </WorkFrame>
       )}
 
+      {/* Blank paper has nothing to zoom: no dots or lines to space out. */}
+      {!(state.mode === 'paper' && state.paper.kind === 'blank') && (
       <div className="zoom-pill" role="group" aria-label="Zoom">
         <button type="button" onClick={() => pan.zoomAt(view.w / 2, view.h / 2, 1 / 1.25)} aria-label="Zoom out">
           −
@@ -271,6 +273,7 @@ export function Preview({
           +
         </button>
       </div>
+      )}
 
       {frameHidden && (state.mode === 'shapes' || drawFrameSurface) && (
         <button type="button" className="show-frame" onClick={() => setChoice({ key: frameKey, hidden: false })}>

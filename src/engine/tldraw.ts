@@ -107,14 +107,22 @@ export function fitTile(editor: Editor, framePx: number) {
 }
 
 /** The whole drawing as a transparent picture, or null when the page is empty. */
-export async function exportArt(editor: Editor): Promise<DrawArt | null> {
+/**
+ * Pixels per page unit for the drawing's picture. Quick while you draw; once you
+ * stop, sharp enough for the biggest download (a 4K or A4 tile at full Size is
+ * about 1750 px across, and 4 × 600 gives 2400).
+ */
+const QUICK = 2
+const SHARP = 4
+
+export async function exportArt(editor: Editor, scale = QUICK): Promise<DrawArt | null> {
   const ids = [...editor.getCurrentPageShapeIds()]
   const b = editor.getCurrentPageBounds()
   if (!ids.length || !b) return null
   // A little room around the shapes so thick and wobbly lines aren't clipped.
   const pad = 24
   const bounds = new Box(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2)
-  const { blob } = await editor.toImage(ids, { format: 'png', background: false, bounds, padding: 0, scale: 2, pixelRatio: 1 })
+  const { blob } = await editor.toImage(ids, { format: 'png', background: false, bounds, padding: 0, scale, pixelRatio: 1 })
   const image = await createImageBitmap(blob)
   return {
     image,
@@ -128,42 +136,66 @@ export async function exportArt(editor: Editor): Promise<DrawArt | null> {
 }
 
 /**
- * Keep a picture of the drawing up to date: a fresh one shortly after any
- * change, never two exports at once. Returns a function that stops watching.
+ * Keep a picture of the drawing up to date: a quick one shortly after any
+ * change, then a sharp one once you've paused, which is what downloads use.
+ * Never two exports at once. Returns a function that stops watching.
  */
 export function watchArt(editor: Editor, onArt: (art: DrawArt | null) => void): () => void {
-  let timer = 0
+  let quickTimer = 0
+  let sharpTimer = 0
   let busy = false
-  let again = false
   let alive = true
-  const run = async () => {
-    timer = 0
-    if (busy) {
-      again = true
-      return
-    }
+  // What's waiting to be exported; quick pictures go first so drawing never lags.
+  let wantQuick = false
+  let wantSharp = false
+  // Bumped on every change, so a sharp picture of an older drawing is never shown.
+  let version = 0
+
+  const pump = async () => {
+    if (busy || !alive) return
+    const scale = wantQuick ? QUICK : wantSharp ? SHARP : 0
+    if (!scale) return
+    if (scale === QUICK) wantQuick = false
+    else wantSharp = false
     busy = true
+    const at = version
     try {
-      const art = await exportArt(editor)
-      if (alive) onArt(art)
+      const art = await exportArt(editor, scale)
+      // A quick picture always helps while you draw; a sharp one only if nothing changed meanwhile.
+      if (alive && (scale === QUICK || at === version)) onArt(art)
     } catch {
       // A failed export leaves the last picture in place.
     }
     busy = false
-    if (again) {
-      again = false
-      schedule()
-    }
+    void pump()
   }
   const schedule = () => {
-    if (!timer) timer = window.setTimeout(run, 80)
+    if (!quickTimer) {
+      quickTimer = window.setTimeout(() => {
+        quickTimer = 0
+        wantQuick = true
+        void pump()
+      }, 80)
+    }
+    clearTimeout(sharpTimer)
+    sharpTimer = window.setTimeout(() => {
+      wantSharp = true
+      void pump()
+    }, 500)
   }
   schedule()
-  const stop = editor.store.listen(schedule, { scope: 'document', source: 'all' })
+  const stop = editor.store.listen(
+    () => {
+      version++
+      schedule()
+    },
+    { scope: 'document', source: 'all' },
+  )
   return () => {
     alive = false
     stop()
-    clearTimeout(timer)
+    clearTimeout(quickTimer)
+    clearTimeout(sharpTimer)
   }
 }
 
