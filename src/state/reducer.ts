@@ -3,8 +3,8 @@ import { starterStrokes } from '../engine/draw'
 import { MOTIFS } from '../engine/motifs'
 import { DEFAULT_HIGHLIGHT, PEN, PENS, type PenId } from '../engine/pens'
 import { PAPERS } from '../engine/paper'
-import { between, createRand, newSeed, pick, shuffled } from '../engine/random'
-import { LAYOUTS } from '../engine/shapes'
+import { between, createRand, newId, newSeed, pick, shuffled } from '../engine/random'
+import { LAYOUTS, scatterStamps } from '../engine/shapes'
 import { DRAW_SYMMETRIES, PHOTO_SYMMETRIES, type SymmetryId } from '../engine/symmetry'
 import type {
   Mode,
@@ -34,6 +34,7 @@ export const initialState: PatternState = {
   draw: {
     surface: 'frame',
     rotation: 0,
+    turned: 0,
     symmetry: 'kaleido',
     strokes: starterStrokes(),
     past: [],
@@ -58,6 +59,8 @@ export type Action =
   | { type: 'size'; value: number }
   | { type: 'palette'; palette: Palette }
   | { type: 'shufflePalette' }
+  | { type: 'editColour'; slot: 'paper' | number; colour: string }
+  | { type: 'scatterShapes' }
   | { type: 'surprise' }
   | { type: 'toggleShape'; id: string }
   | { type: 'moveShape'; from: number; to: number }
@@ -73,9 +76,10 @@ export type Action =
   | { type: 'updateStamp'; id: number; patch: Partial<Stamp> }
   | { type: 'removeStamp'; id: number }
   | { type: 'selectStamp'; id: number | null }
-  | { type: 'pickShape'; id: string }
   | { type: 'surface'; surface: DrawSurface }
   | { type: 'drawRotation'; deg: number }
+  | { type: 'drawTurned'; deg: number }
+  | { type: 'adoptStrokes' }
   | { type: 'pen'; pen: PenId }
   | { type: 'penSize'; value: number }
   | { type: 'penOpacity'; value: number }
@@ -154,6 +158,69 @@ function surprise(state: PatternState): PatternState {
   }
 }
 
+/**
+ * "Shuffle shapes": new places and sizes for the shapes, as your own
+ * arrangement so you can keep moving them in the frame. Shapes you already
+ * placed keep their shape and colour; otherwise the chosen shapes are spread out.
+ */
+function scatter(state: PatternState): PatternState {
+  const rand = createRand(newSeed())
+  const { active, layout, custom } = state.shapes
+  const inks = state.palette.inks.length
+  const own = layout === 'custom' && custom && custom.stamps.length > 0
+  const base = own
+    ? custom.stamps
+    : Array.from({ length: active.length === 1 ? 6 : Math.min(10, Math.max(6, active.length * 2)) }, (_, i) => ({
+        id: newId(),
+        motif: active[i % active.length],
+        rot: 0,
+        // One shape cycles through the colours; several shapes each keep their own.
+        ink: (active.length > 1 ? i % active.length : i) % inks,
+      }))
+  return {
+    ...state,
+    size: own ? state.size : Math.max(state.size, 0.3),
+    shapes: {
+      ...state.shapes,
+      layout: 'custom',
+      custom: { aspect: own ? custom.aspect : 1, stamps: scatterStamps(rand, base) },
+      selected: null,
+    },
+  }
+}
+
+/**
+ * In your own arrangement the shape grid shows what's in the tile. Turning a
+ * shape on drops two of it into the roomiest spots (and makes it what a tap in
+ * the frame adds); turning it off takes every copy out. The last shape stays.
+ */
+function toggleInArrangement(state: PatternState, custom: Arrangement, id: string, pick: string): PatternState {
+  const used = [...new Set(custom.stamps.map((s) => s.motif))]
+  let stamps: Stamp[]
+  let nextPick = pick
+  if (used.includes(id)) {
+    if (used.length === 1) return state
+    stamps = custom.stamps.filter((s) => s.motif !== id)
+    if (pick === id) nextPick = stamps[0].motif
+  } else {
+    const ink = used.length % state.palette.inks.length
+    const fresh = [0, 1].map(() => ({ id: newId(), motif: id, rot: 0, ink }))
+    stamps = [...custom.stamps, ...scatterStamps(createRand(newSeed()), fresh, custom.stamps)]
+    nextPick = id
+  }
+  return {
+    ...state,
+    shapes: {
+      ...state.shapes,
+      // Kept in step, so a preset layout picked next uses the same shapes.
+      active: [...new Set(stamps.map((s) => s.motif))],
+      custom: { ...custom, stamps },
+      selected: null,
+      pick: nextPick,
+    },
+  }
+}
+
 export function reducer(state: PatternState, action: Action): PatternState {
   switch (action.type) {
     case 'mode':
@@ -166,11 +233,26 @@ export function reducer(state: PatternState, action: Action): PatternState {
       const seed = newSeed()
       return { ...state, seed, palette: harmoniousPalette(createRand(seed)) }
     }
+    case 'editColour': {
+      // Your own edit turns the set into "Yours", so it never pretends to be a named set.
+      const { paper, inks } = state.palette
+      return {
+        ...state,
+        palette: {
+          name: 'Yours',
+          paper: action.slot === 'paper' ? action.colour : paper,
+          inks: inks.map((c, i) => (i === action.slot ? action.colour : c)),
+        },
+      }
+    }
     case 'surprise':
       return surprise(state)
+    case 'scatterShapes':
+      return scatter(state)
 
     case 'toggleShape': {
-      const { active } = state.shapes
+      const { active, layout, custom, pick } = state.shapes
+      if (layout === 'custom' && custom) return toggleInArrangement(state, custom, action.id, pick)
       const on = active.includes(action.id)
       // Never let the pattern go empty: the last shape can't be switched off.
       if (on && active.length === 1) return state
@@ -236,14 +318,16 @@ export function reducer(state: PatternState, action: Action): PatternState {
     }
     case 'selectStamp':
       return { ...state, shapes: { ...state.shapes, selected: action.id } }
-    case 'pickShape':
-      // Choosing what to add next lets go of the selected shape, so the next tap adds.
-      return { ...state, shapes: { ...state.shapes, pick: action.id, selected: null } }
     case 'drawRotation': {
       // Kept within -180..180 so the readout never says 540°; a half turn reads 180°, not -180°.
       const deg = ((((action.deg + 180) % 360) + 360) % 360) - 180
       return { ...state, draw: { ...state.draw, rotation: deg === -180 ? 180 : deg } }
     }
+    case 'drawTurned':
+      return { ...state, draw: { ...state.draw, turned: action.deg } }
+    case 'adoptStrokes':
+      // The lines now live in the tldraw frame, unturned; the frame turns them to match.
+      return { ...state, draw: { ...state.draw, strokes: [], past: [], future: [], turned: 0 } }
     case 'surface':
       return { ...state, draw: { ...state.draw, surface: action.surface } }
     case 'space':

@@ -2,6 +2,7 @@ import { useMemo, type Dispatch } from 'react'
 import { PALETTES } from '../engine/color'
 import { createDrawRenderer } from '../engine/draw'
 import { DRAW_SYMMETRIES, SYMMETRIES } from '../engine/symmetry'
+import type { DrawArt } from '../engine/tldraw'
 import type { Action } from '../state/reducer'
 import type { PatternState } from '../state/types'
 import { OptionCard, Section, Slider } from './controls'
@@ -10,8 +11,16 @@ import { MiniPattern } from './MiniPattern'
 const PAPERS = ['#ffffff', ...new Set(PALETTES.map((p) => p.paper))]
 
 /** Pens live in the bar on the canvas; this panel is only about how the drawing repeats. */
-export function DrawPanel({ state, dispatch }: { state: PatternState; dispatch: Dispatch<Action> }) {
-  const { symmetry, strokes, rotation } = state.draw
+export function DrawPanel({
+  state,
+  dispatch,
+  art,
+}: {
+  state: PatternState
+  dispatch: Dispatch<Action>
+  art: DrawArt | null
+}) {
+  const { symmetry, strokes, rotation, turned } = state.draw
   const paper = state.palette.paper
 
   // Each choice previews *your* drawing in that style, not a stock picture.
@@ -19,9 +28,9 @@ export function DrawPanel({ state, dispatch }: { state: PatternState; dispatch: 
     () =>
       DRAW_SYMMETRIES.map((id) => ({
         ...SYMMETRIES[id],
-        renderer: createDrawRenderer({ strokes, symmetry: id, size: 0, paper, rotation }),
+        renderer: createDrawRenderer({ strokes, symmetry: id, size: 0, paper, rotation, art, turned }),
       })),
-    [strokes, paper, rotation],
+    [strokes, paper, rotation, art, turned],
   )
 
   const surface = state.draw.surface
@@ -75,6 +84,7 @@ export function DrawPanel({ state, dispatch }: { state: PatternState; dispatch: 
           readout={`${rotation}°`}
           value={rotation}
           onChange={(deg) => dispatch({ type: 'drawRotation', deg })}
+          onReset={() => dispatch({ type: 'drawRotation', deg: 0 })}
         />
         <Slider
           label="Size"
@@ -102,7 +112,7 @@ export function DrawPanel({ state, dispatch }: { state: PatternState; dispatch: 
             </button>
           ))}
         </div>
-        <p className="note">Pens and colours are in the bar. Hold Shift for straight lines.</p>
+        <p className="note">Pens and colours are in the bar. In the frame, pick Select to move, resize or turn what you drew.</p>
       </Section>
     </>
   )

@@ -22,6 +22,25 @@ export const EXPORTS: ExportPreset[] = [
   { id: 'a4', name: '2480 × 3508', hint: 'A4 at 300 dpi, true size', width: 2480, height: 3508, k: 300 / 96 },
 ]
 
+/** Paint a repeat into a canvas of `width` × `height` device pixels, centred the way the preview is. */
+export function paintCentred(ctx: CanvasRenderingContext2D, renderer: Renderer, width: number, height: number, k: number) {
+  ctx.setTransform(k, 0, 0, k, 0, 0)
+  const ox = width / k / 2 - renderer.tileW / 2
+  const oy = height / k / 2 - renderer.tileH / 2
+  ctx.translate(ox, oy)
+  renderer.paint(ctx, -ox, -oy, width / k, height / k, k)
+}
+
+/** Hand a file to the browser to save. */
+export function download(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export async function exportPng(renderer: Renderer, preset: ExportPreset, name: string) {
   // Keep very large repeats (many shapes, lots of space) under ~6000 px.
   const k = preset.width ? preset.k : Math.min(preset.k, 6000 / Math.max(renderer.tileW, renderer.tileH))
@@ -31,23 +50,12 @@ export async function exportPng(renderer: Renderer, preset: ExportPreset, name: 
   canvas.width = width
   canvas.height = height
   const ctx = canvas.getContext('2d')!
-  ctx.scale(k, k)
   if (preset.width) {
-    // Centre a repeat in the image, the same way the preview does.
-    const ox = width / k / 2 - renderer.tileW / 2
-    const oy = height / k / 2 - renderer.tileH / 2
-    ctx.translate(ox, oy)
-    renderer.paint(ctx, -ox, -oy, width / k, height / k, k)
+    paintCentred(ctx, renderer, width, height, k)
   } else {
     ctx.setTransform(width / renderer.tileW, 0, 0, height / renderer.tileH, 0, 0)
     renderer.paint(ctx, 0, 0, renderer.tileW, renderer.tileH, k)
   }
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
-  if (!blob) return
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${name}-${preset.id}.png`
-  a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  if (blob) download(blob, `${name}-${preset.id}.png`)
 }

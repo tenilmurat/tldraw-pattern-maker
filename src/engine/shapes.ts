@@ -1,6 +1,6 @@
 import type { Palette } from './color'
 import { MOTIF_BY_ID, type Motif } from './motifs'
-import { hash2, newId } from './random'
+import { between, hash2, newId, type Rand } from './random'
 import { lcm, lerp, mod, type Renderer } from './renderer'
 import type { Arrangement, ShapeLayout, Stamp } from '../state/types'
 
@@ -283,4 +283,40 @@ export function arrangementFrom(o: ShapeOptions): { custom: Arrangement; size: n
   }
   // Keep the tile the same size on screen where the Size slider allows it.
   return { custom: { aspect: H / W, stamps }, size: customSizeFor(W) }
+}
+
+/**
+ * "Shuffle shapes": spread shapes over one tile at random places and sizes,
+ * keeping them from piling on top of each other. Distances wrap around the
+ * tile edges, because the tile repeats and a shape near the right edge sits
+ * next to one near the left. Keeps each stamp's shape, colour and turn.
+ */
+export function scatterStamps(
+  rand: Rand,
+  stamps: Omit<Stamp, 'x' | 'y' | 'size'>[],
+  /** Shapes that stay where they are; new ones keep clear of them. */
+  fixed: Stamp[] = [],
+): Stamp[] {
+  const placed: Stamp[] = [...fixed]
+  const wrap = (d: number) => Math.min(Math.abs(d), 1 - Math.abs(d))
+  for (const st of stamps) {
+    let best: Stamp | null = null
+    let bestGap = -Infinity
+    // Try a few spots and keep the roomiest; shrink a little each time it's crowded.
+    for (let t = 0; t < 80; t++) {
+      const size = between(rand, 0.08, 0.26) * (1 - t / 160)
+      const cand = { ...st, x: rand(), y: rand(), size }
+      let gap = Infinity
+      for (const p of placed) {
+        gap = Math.min(gap, Math.hypot(wrap(cand.x - p.x), wrap(cand.y - p.y)) - (cand.size + p.size) / 2)
+      }
+      if (gap > bestGap) {
+        best = cand
+        bestGap = gap
+      }
+      if (gap > 0.03) break
+    }
+    placed.push(best!)
+  }
+  return placed.slice(fixed.length)
 }

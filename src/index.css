@@ -1553,3 +1553,257 @@ button {
     translate: 6px 0;
   }
 }
+
+/* --- Your colours (editable swatches) ------------------------------------- */
+
+.own-colours {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.own-colours-label {
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.own-colours-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.own-colours-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--border-subtle);
+}
+
+.colour-well {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.colour-well:hover {
+  transform: scale(1.08);
+}
+
+.colour-well:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.colour-well input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.button-row .button svg {
+  flex-shrink: 0;
+}
+
+.button-row .button {
+  white-space: nowrap;
+}
+
+/* --- tldraw in the drawing frame ------------------------------------------ */
+
+/* tldraw sits on the frame's graph paper: no background of its own. */
+.frame-tldraw {
+  position: absolute;
+  inset: 0;
+}
+
+.frame-tldraw .tl-container {
+  --tl-color-background: transparent;
+  background: transparent;
+}
+
+.frame-tldraw .tl-background {
+  display: none;
+}
+
+/* The Select tool sits before the pens and lights up like a chosen tool. */
+.bar-icon.select-tool {
+  margin-right: 4px;
+}
+
+.bar-icon.select-tool[aria-pressed='true'] {
+  background: var(--bar-ink);
+  color: var(--bar-bg, #1c1c1e);
+}
+
+/* --- Photo turn: play and MP4 ---------------------------------------------- */
+
+.turn-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.turn-actions .button:first-child {
+  flex: 1;
+}
+
+.turn-actions .button[aria-pressed='true'] {
+  background: var(--info-subtle);
+  color: var(--text-info);
+}
+
+.button.square {
+  min-width: 76px;
+  gap: 6px;
+}
+
+.square-label {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+}
+
+/* A ring that fills as the video is made, with the percentage inside. */
+.turn-progress {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--secondary) 70%, transparent 72%),
+    conic-gradient(var(--accent) calc(var(--p) * 360deg), var(--border) 0);
+  font-size: 8px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.note.is-error {
+  color: var(--text-error, #d9443a);
+}
+
+/* Reset icon beside a slider's title. */
+.slider-top {
+  align-items: center;
+}
+
+.slider-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.slider-reset {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: -4px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.slider-reset:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.slider-reset:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.slider-reset svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- Moving and zooming the pattern ---------------------------------------- */
+
+.preview.can-pan canvas {
+  cursor: grab;
+}
+
+.preview.is-panning canvas {
+  cursor: grabbing;
+}
+
+.zoom-pill {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-panel);
+}
+
+.zoom-pill button {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.zoom-pill button:hover {
+  background: var(--surface-hover);
+}
+
+.zoom-pill .zoom-value {
+  min-width: 56px;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .zoom-pill {
+    bottom: auto;
+    top: 12px;
+  }
+}
+
+/* "Its own colours": a little rainbow, shown when an SVG is selected. */
+.swatch.own-colours-swatch {
+  background: conic-gradient(#e03131, #f59f00, #2f9e44, #1c7ed6, #ae3ec9, #e03131);
+}
+
+/* Icons in the frame's pill buttons. */
+.frame-link,
+.show-frame {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.frame-link svg {
+  width: 14px;
+  height: 14px;
+}
+
+.show-frame svg {
+  width: 16px;
+  height: 16px;
+}

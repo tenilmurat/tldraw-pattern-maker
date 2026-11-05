@@ -2,6 +2,7 @@ import { grainFor, outlinePath, PEN } from './pens'
 import { lerp, tileDensity, tileRenderer, type TileRenderer } from './renderer'
 import { latticeOffsets, multiply, SYMMETRIES, transformBox, type Affine, type Box, type SymmetryId } from './symmetry'
 import type { Stroke } from '../state/types'
+import type { DrawArt } from './tldraw'
 
 /** Turn by `deg` around the middle of the drawing canvas (0.5, 0.5 in tile units). */
 export function turnAbout(deg: number): Affine {
@@ -74,6 +75,27 @@ function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke, symmetry: Sym
 }
 
 /**
+ * The tldraw drawing, as a picture, with every mirror/turn of the group and
+ * wrapped into the tile, exactly like a stroke. `turn` is any turn the
+ * picture doesn't already have in it.
+ */
+function drawArt(ctx: CanvasRenderingContext2D, art: DrawArt, symmetry: SymmetryId, T: number, turn: Affine) {
+  const g = SYMMETRIES[symmetry]
+  const { minX, minY, maxX, maxY } = art.box
+  for (const g0 of g.ops) {
+    const op = multiply(g0, turn)
+    for (const [ox, oy] of latticeOffsets(g, transformBox(op, art.box))) {
+      ctx.save()
+      ctx.scale(T, T)
+      ctx.translate(ox, oy)
+      ctx.transform(...op)
+      ctx.drawImage(art.image, minX, minY, maxX - minX, maxY - minY)
+      ctx.restore()
+    }
+  }
+}
+
+/**
  * Strokes exactly as drawn: no mirrors, no wrapping. This is the free canvas
  * in the working frame; the repeat style is only applied to the pattern.
  * `unitPx` is CSS px per tile unit; ctx should already be scaled for the screen.
@@ -110,6 +132,10 @@ export interface DrawOptions {
   paper: string
   /** Turn of the whole drawing, in degrees, around the middle of the canvas. */
   rotation: number
+  /** The drawing made in the tldraw frame, if any. */
+  art?: DrawArt | null
+  /** How much of `rotation` the tldraw drawing already has in it. */
+  turned?: number
 }
 
 export interface DrawRenderer extends TileRenderer {
@@ -144,6 +170,7 @@ export function createDrawRenderer(o: DrawOptions): DrawRenderer {
     ink.set(
       k,
       composite(ctx, (layer) => {
+        if (o.art) drawArt(layer, o.art, o.symmetry, T, turnAbout(o.rotation - (o.turned ?? 0)))
         for (const s of o.strokes) drawStroke(layer, s, o.symmetry, T, turn)
       }),
     )

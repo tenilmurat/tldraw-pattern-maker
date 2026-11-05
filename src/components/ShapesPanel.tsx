@@ -13,11 +13,12 @@ function MotifIcon({ id }: { id: string }) {
 }
 
 export function ShapesPanel({ state, dispatch }: { state: PatternState; dispatch: Dispatch<Action> }) {
-  const { active, layout, space, custom, selected, pick } = state.shapes
+  const { active, layout, space, custom, selected } = state.shapes
   const own = layout === 'custom'
   const inks = state.palette.inks
   const [dragFrom, setDragFrom] = useState<number | null>(null)
   const stamp = own ? custom?.stamps.find((s) => s.id === selected) : undefined
+  const used = new Set(own ? custom?.stamps.map((s) => s.motif) : [])
 
   const layoutRenderers = useMemo(() => {
     const base = { active, size: 0.28, space: 0.5, palette: state.palette, seed: state.seed }
@@ -41,26 +42,26 @@ export function ShapesPanel({ state, dispatch }: { state: PatternState; dispatch
     <>
       <Section
         title="Shapes"
-        aside={<span className="aside">{own ? 'Tap the frame to add' : 'Pick one or more'}</span>}
+        aside={
+          <span className="aside">
+            {own ? 'Tap the frame to add more' : 'Pick one or more'}
+          </span>
+        }
       >
         <div className="motif-grid">
           {MOTIFS.map((m) => {
-            // In your own arrangement the grid chooses what a tap adds;
-            // otherwise it switches shapes on and off.
-            const index = active.indexOf(m.id)
-            const on = own ? pick === m.id : index >= 0
-            const colour = own ? 'var(--ink)' : inks[(active.length > 1 ? index : 0) % inks.length]
+            // In your own arrangement the grid shows the shapes in your tile;
+            // otherwise the shapes the layout repeats. Either way a tap turns one on or off.
+            const on = own ? used.has(m.id) : active.includes(m.id)
+            const last = on && (own ? used.size : active.length) === 1
             return (
               <button
                 key={m.id}
                 type="button"
                 className="motif-toggle"
                 aria-pressed={on}
-                title={!own && on && active.length === 1 ? 'Your pattern needs at least one shape' : m.name}
-                style={on ? { color: colour } : undefined}
-                onClick={() =>
-                  dispatch(own ? { type: 'pickShape', id: m.id } : { type: 'toggleShape', id: m.id })
-                }
+                title={last ? 'Your pattern needs at least one shape' : m.name}
+                onClick={() => dispatch({ type: 'toggleShape', id: m.id })}
               >
                 <MotifIcon id={m.id} />
                 <span className="sr-only">{m.name}</span>
@@ -101,6 +102,27 @@ export function ShapesPanel({ state, dispatch }: { state: PatternState; dispatch
             </ol>
           </div>
         )}
+
+        <div className="button-row">
+          <button
+            type="button"
+            className="button"
+            title="New places and sizes for your shapes"
+            onClick={() => dispatch({ type: 'scatterShapes' })}
+          >
+            {Icons.shuffle}
+            Shuffle
+          </button>
+          <button
+            type="button"
+            className="button"
+            title="A new set of colours that go together"
+            onClick={() => dispatch({ type: 'shufflePalette' })}
+          >
+            {Icons.palette}
+            New colours
+          </button>
+        </div>
       </Section>
 
       {stamp && (
@@ -146,6 +168,7 @@ export function ShapesPanel({ state, dispatch }: { state: PatternState; dispatch
             readout={`${Math.round(stamp.rot)}°`}
             value={((stamp.rot + 540) % 360) - 180}
             onChange={(rot) => dispatch({ type: 'updateStamp', id: stamp.id, patch: { rot } })}
+            onReset={() => dispatch({ type: 'updateStamp', id: stamp.id, patch: { rot: 0 } })}
           />
           <div className="button-row">
             <button

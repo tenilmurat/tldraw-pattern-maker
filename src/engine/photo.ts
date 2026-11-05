@@ -84,12 +84,19 @@ export function createPhotoRenderer(o: PhotoOptions): TileRenderer {
     slice.width = Math.ceil((dw + 2 * m) * k)
     slice.height = Math.ceil((dh + 2 * m) * k)
     const sctx = slice.getContext('2d')!
+    sctx.imageSmoothingQuality = 'high'
     sctx.setTransform(k, 0, 0, k, m * k, m * k)
     sctx.translate(dw / 2, dh / 2)
     sctx.scale(dw / rect.w, dw / rect.w)
     sctx.rotate(-rect.angle)
     sctx.translate(-rect.cx, -rect.cy)
-    sctx.drawImage(o.image.source, 0, 0, o.image.width, o.image.height)
+    // Only the part of the photo around the slice, however turned, so big photos stay quick.
+    const r = Math.hypot(rect.w, rect.h) / 2 + 4
+    const x0 = Math.max(0, Math.floor(rect.cx - r))
+    const y0 = Math.max(0, Math.floor(rect.cy - r))
+    const x1 = Math.min(o.image.width, Math.ceil(rect.cx + r))
+    const y1 = Math.min(o.image.height, Math.ceil(rect.cy + r))
+    if (x1 > x0 && y1 > y0) sctx.drawImage(o.image.source, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0)
 
     // 2. Mirror and turn the slice around every lattice point that touches the tile.
     const clip = grow(g.domain, m / T)
@@ -115,13 +122,25 @@ export function createPhotoRenderer(o: PhotoOptions): TileRenderer {
  * Built-in sample "photo": a loose painting made from the take-home's own
  * shapes, so Photo mode opens on a real kaleidoscope instead of an upload box.
  */
+/**
+ * The most pixels a photo keeps. iPhone and iPad Safari won't hold a canvas
+ * bigger than 4096 × 4096 worth; elsewhere 6000 × 6000 keeps even 36 MP photos whole.
+ */
+const isIOS =
+  typeof navigator !== 'undefined' &&
+  (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+const MAX_PHOTO_PX = isIOS ? 4096 * 4096 : 6000 * 6000
+
 export function createSampleImage(): PhotoImage {
   const W = 1200
   const H = 900
+  // Painted at up to 4×, so a slice still has about a pixel for every screen pixel at the biggest size.
+  const S = Math.min(4, Math.sqrt(MAX_PHOTO_PX / (W * H)))
   const canvas = document.createElement('canvas')
-  canvas.width = W
-  canvas.height = H
+  canvas.width = Math.round(W * S)
+  canvas.height = Math.round(H * S)
   const ctx = canvas.getContext('2d')!
+  ctx.scale(S, S)
   const rand = createRand(11)
   const colours = ['#f2b134', '#e8743b', '#c9577a', '#2f6b4f', '#8bb174', '#4fa3c7', '#fff4e8']
   ctx.fillStyle = '#fff4e8'
@@ -139,18 +158,23 @@ export function createSampleImage(): PhotoImage {
     ctx.fill(motif.path)
     ctx.restore()
   }
-  return { source: canvas, width: W, height: H }
+  return { source: canvas, width: canvas.width, height: canvas.height }
 }
 
-/** Load a user file, downscaled so mirroring stays fast. */
-export async function loadImage(url: string, max = 1800): Promise<PhotoImage> {
+
+/** Load a user file at full resolution, only scaling down (smoothly) if it's bigger than browsers allow. */
+export async function loadImage(url: string, maxPixels = MAX_PHOTO_PX): Promise<PhotoImage> {
   const img = new Image()
   img.src = url
   await img.decode()
-  const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight))
+  const w = img.naturalWidth
+  const h = img.naturalHeight
+  const scale = Math.min(1, Math.sqrt(maxPixels / (w * h)))
   const canvas = document.createElement('canvas')
-  canvas.width = Math.round(img.naturalWidth * scale)
-  canvas.height = Math.round(img.naturalHeight * scale)
-  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+  canvas.width = Math.round(w * scale)
+  canvas.height = Math.round(h * scale)
+  const ctx = canvas.getContext('2d')!
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
   return { source: canvas, width: canvas.width, height: canvas.height }
 }

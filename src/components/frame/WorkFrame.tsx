@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { Icons } from '../controls'
 
 export interface FrameBox {
   left: number
@@ -78,6 +79,7 @@ export function WorkFrame({
           <b>{title}</b> {hint}
         </span>
         <button type="button" className="frame-link" onClick={onHide}>
+          {Icons.eye}
           See whole pattern
         </button>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react'
 import { createPhotoRenderer, selectionRect, type PhotoImage } from '../engine/photo'
+import { exportTurnMp4, loopTurn } from '../engine/turnVideo'
 import { PHOTO_SYMMETRIES, SYMMETRIES } from '../engine/symmetry'
 import type { Action } from '../state/reducer'
 import type { PatternState } from '../state/types'
@@ -126,6 +127,37 @@ export function PhotoPanel({
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
   const { symmetry, selection, src, name } = state.photo
+  const [playing, setPlaying] = useState(false)
+  // 0..1 while the MP4 is being made.
+  const [recording, setRecording] = useState<number | null>(null)
+  const [videoError, setVideoError] = useState<string | null>(null)
+
+  // Playing turns the slice round and round, from wherever it is now.
+  const angleRef = useRef(selection.angle)
+  useEffect(() => {
+    angleRef.current = selection.angle
+  }, [selection.angle])
+  useEffect(() => {
+    if (!playing) return
+    return loopTurn(angleRef.current, (angle) => dispatch({ type: 'selection', selection: { angle } }))
+  }, [playing, dispatch])
+
+  const makeVideo = async () => {
+    setVideoError(null)
+    setRecording(0)
+    try {
+      await exportTurnMp4(
+        (angle) => createPhotoRenderer({ image, selection: { ...selection, angle }, symmetry, size: state.size }),
+        selection.angle,
+        'pattern-photo',
+        setRecording,
+      )
+    } catch (e) {
+      setVideoError(e instanceof Error ? e.message : 'The video couldn’t be made.')
+    } finally {
+      setRecording(null)
+    }
+  }
 
   const options = useMemo(
     () =>
@@ -178,8 +210,41 @@ export function PhotoPanel({
           step={1}
           value={selection.angle}
           readout={`${Math.round(selection.angle)}°`}
-          onChange={(angle) => dispatch({ type: 'selection', selection: { angle } })}
+          onChange={(angle) => {
+            setPlaying(false)
+            dispatch({ type: 'selection', selection: { angle } })
+          }}
+          onReset={() => {
+            setPlaying(false)
+            dispatch({ type: 'selection', selection: { angle: 0 } })
+          }}
         />
+        <div className="turn-actions">
+          <button type="button" className="button" aria-pressed={playing} onClick={() => setPlaying((p) => !p)}>
+            {playing ? Icons.pause : Icons.play}
+            {playing ? 'Pause' : 'Play turn'}
+          </button>
+          <button
+            type="button"
+            className="button square"
+            onClick={makeVideo}
+            disabled={recording !== null}
+            title="Download one full turn as an MP4 that loops"
+            aria-label={recording !== null ? `Making MP4, ${Math.round(recording * 100)}%` : 'Download MP4 of one full turn'}
+          >
+            {recording !== null ? (
+              <span className="turn-progress" style={{ '--p': recording } as React.CSSProperties}>
+                {Math.round(recording * 100)}
+              </span>
+            ) : (
+              <>
+                {Icons.export}
+                <span className="square-label">MP4</span>
+              </>
+            )}
+          </button>
+        </div>
+        {videoError && <p className="note is-error">{videoError}</p>}
       </Section>
 
       <Section title="Repeat style">

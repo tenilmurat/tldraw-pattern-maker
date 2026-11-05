@@ -16,11 +16,31 @@ export function ColoursSection({ state, dispatch }: { state: PatternState; dispa
       title="Colours"
       aside={
         <button type="button" className="chip" onClick={() => dispatch({ type: 'shufflePalette' })}>
-          {Icons.shuffle}
-          Shuffle
+          {Icons.palette}
+          New colours
         </button>
       }
     >
+      {/* Your current colours, each one editable: tap a circle to pick a new colour. */}
+      <div className="own-colours">
+        <span className="own-colours-label">Your colours · tap to change</span>
+        <div className="own-colours-row">
+          <ColourWell
+            label="Background"
+            colour={current.paper}
+            onChange={(colour) => dispatch({ type: 'editColour', slot: 'paper', colour })}
+          />
+          <span className="own-colours-divider" aria-hidden="true" />
+          {current.inks.map((ink, i) => (
+            <ColourWell
+              key={i}
+              label={`Colour ${i + 1}`}
+              colour={ink}
+              onChange={(colour) => dispatch({ type: 'editColour', slot: i, colour })}
+            />
+          ))}
+        </div>
+      </div>
       <div className="palette-grid" role="radiogroup" aria-label="Colours">
         {list.map((p, i) => (
           <button
@@ -42,5 +62,15 @@ export function ColoursSection({ state, dispatch }: { state: PatternState; dispa
         ))}
       </div>
     </Section>
+  )
+}
+
+/** A round swatch over the browser's own colour picker. */
+function ColourWell({ label, colour, onChange }: { label: string; colour: string; onChange: (c: string) => void }) {
+  return (
+    <label className="colour-well" title={label} style={{ background: colour }}>
+      <input type="color" value={colour} onChange={(e) => onChange(e.target.value)} />
+      <span className="sr-only">{label}</span>
+    </label>
   )
 }

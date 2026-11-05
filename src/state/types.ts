@@ -83,6 +83,8 @@ export interface PatternState {
     surface: DrawSurface
     /** Turn of the whole drawing, in degrees. */
     rotation: number
+    /** How much of that turn has been applied to the shapes in the tldraw frame. */
+    turned: number
     symmetry: SymmetryId
     strokes: Stroke[]
     /** Earlier drawings, for undo (clearing is one step too). */
