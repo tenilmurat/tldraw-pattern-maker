@@ -2,6 +2,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Panel } from './components/Panel'
 import { Preview } from './components/Preview'
 import { TopBar } from './components/TopBar'
+import { Welcome } from './logo/Welcome'
 import { createRenderer } from './engine/createRenderer'
 import { createSampleImage, loadImage, type PhotoImage } from './engine/photo'
 import { initialState, reducer } from './state/reducer'
@@ -108,6 +109,7 @@ const App = () => {
       <Preview renderer={renderer} state={state} dispatch={dispatch} art={art} onArt={setArt} />
       <TopBar state={state} dispatch={dispatch} renderer={renderer} />
       <Panel state={state} dispatch={dispatch} photo={photo} art={art} />
+      <Welcome />
     </main>
   )
 }

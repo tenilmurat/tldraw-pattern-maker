@@ -159,14 +159,14 @@ button {
   align-items: center;
 }
 
-.brand img {
+.brand .logo-mark {
   display: block;
-  height: 28px;
+  height: 24px;
   width: auto;
 }
 
 @media (prefers-color-scheme: dark) {
-  .brand img {
+  .brand .logo-mark {
     filter: invert(1) hue-rotate(180deg);
   }
 }
@@ -1883,8 +1883,8 @@ button {
 }
 
 @media (max-width: 720px) {
-  .brand img {
-    height: 22px;
+  .brand .logo-mark {
+    height: 20px;
   }
 }
 
@@ -1926,4 +1926,104 @@ button {
 .order-list li .grip svg {
   width: 14px;
   height: 14px;
+}
+
+/* --- Logo motion ----------------------------------------------------------- */
+
+/* The opening screen: the logo's welcome motion over the page, then a soft fade. */
+.welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  /* Always on white, like the logo video, whatever the theme. */
+  background: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.welcome.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.welcome-stage {
+  width: 100%;
+  height: 100%;
+}
+
+/* Header logo on hover: a little pattern ripples across the square, the semicolon nods. */
+.logo-ripple circle {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.logo-semicolon,
+.logo-word {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.brand:hover .logo-ripple circle {
+  animation: logo-ripple 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--k) * 45ms);
+}
+
+.brand:hover .logo-semicolon {
+  animation: logo-nod 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.brand:hover .logo-word {
+  animation: logo-drift 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes logo-ripple {
+  0% {
+    opacity: 0;
+    scale: 0.3;
+  }
+  35% {
+    opacity: 0.55;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.5;
+  }
+}
+
+@keyframes logo-nod {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+  30% {
+    translate: 0 1.5px;
+    scale: 0.94;
+  }
+  60% {
+    translate: 0 -0.75px;
+    scale: 1.02;
+  }
+}
+
+@keyframes logo-drift {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  40% {
+    translate: 3px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand:hover .logo-ripple circle,
+  .brand:hover .logo-semicolon,
+  .brand:hover .logo-word {
+    animation: none;
+  }
 }

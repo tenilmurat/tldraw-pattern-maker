@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react'
-import logo from '../assets/logo.svg'
+import { LogoMark } from '../logo/LogoMark'
 import { EXPORTS, exportPng } from '../engine/export'
 import type { Renderer } from '../engine/renderer'
 import type { Action } from '../state/reducer'
@@ -54,7 +54,7 @@ export function TopBar({
   return (
     <header className="header">
       <div className="brand">
-        <img src={logo} alt="tldraw pattern" width={142} height={28} />
+        <LogoMark />
       </div>
 
       <nav className="modes" aria-label="What to make a pattern from">
