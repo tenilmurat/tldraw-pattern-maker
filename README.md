@@ -37,10 +37,26 @@ So Shapes is the baseline that meets the brief, and it's what you see first. Ske
 - `src/state/reducer.ts` holds the whole app state in one reducer. It's saved to the browser, so you come back to what you made.
 - `src/components/` is the interface: the top bar, the side panel for each mode, the tile editor and the tour.
 - `src/logo/` is the logo motion. It's a pure function of time with no browser code, so the same frames can be rendered outside the page, for example as a video.
+- `src/test/` checks the decisions above, one file per idea.
+
+## How the decisions are tested
+
+Each decision above has tests in `src/test/`, so a change that breaks one fails loudly:
+
+| File | What it checks |
+|---|---|
+| `seams.test.ts` | Every Shapes layout repeats exactly after one tile. Every repeat style in Draw and Photo is a real wallpaper pattern. Every edge of a Photo slice is a mirror, so the cuts meet, and Spin is shown to fail that, which is why Photo leaves it out. |
+| `colour.test.ts` | Across 2,000 random palettes, the strongest ink always has at least 4.5:1 contrast with the paper (the WCAG bar for text), the paper shares the ink's hue, and the same seed gives the same palette. Every named palette has an ink that stands out. |
+| `controls.test.ts` | No jargon in any name or hint people see. Zoom and Size are the same control. Surprise me always stays in good ranges in every mode. Every visit opens on a new pattern and keeps your Draw, Photo and Paper settings. Opening your tile keeps the same shapes. |
+| `output.test.ts` | A4 is A4 at 300 dpi, and 5 mm on the paper grid prints as 5 mm. The video is 240 frames, and its last frame leads into the first with no jump. |
+| `firstVisit.test.ts` | Draw opens on a clean page, the tour runs in its order, and the logo hover ends on "designed by Murat", with a colour band sweeping through it once, and back. |
+| `welcome.test.tsx` | The opening screen always waits on "Click anywhere to start" with "by Murat", and a click or a key starts the logo. |
+
+Pixels aren't tested: the tests run without a real canvas and check where things go, not how they look.
 
 ## What I'd do next
 
-- **Tests for the engine.** Seams, palette contrast and the seeded random are pure functions and easy to test. There are none yet.
+- **Tests in a real browser.** The tests above cover the logic. I'd add a few browser tests too, for the tour, the tldraw canvas and the downloads.
 - **One drawing engine.** "Draw on the pattern" still uses my first pen engine; the square uses tldraw. I'd move both to tldraw.
 - **A smaller first load.** The bundle is about 2.3 MB (680 kB gzipped), mostly tldraw. I'd load it only when you open Draw.
 - **No private tldraw API.** Dropping SVGs into the drawing goes through a handler tldraw doesn't make public. I'd ask for a public way to do it.
@@ -64,6 +80,30 @@ npm run preview
 ```
 
 The Draw mode uses the tldraw SDK. tldraw runs without a licence key on localhost, so both commands above work as they are. A deploy on a real domain needs a key in `VITE_TLDRAW_LICENSE_KEY`.
+
+## Checking it
+
+The tests need Node 22.12 or newer.
+
+```bash
+npm test
+```
+
+Runs the tests once (`npm run test:watch` keeps them running while you edit).
+
+```bash
+npm run check
+```
+
+Runs everything a change should pass: lint, tests, typecheck and the production build.
+
+```bash
+npm run check:clone
+```
+
+Clones the repo from GitHub into an empty folder, the way a reviewer would, runs `npm ci` and `npm run check` on that copy, then deletes it. It only sees what has been pushed.
+
+To see the first visit as a new person would, open the app in a private window: the welcome, the tour, a fresh pattern and an empty Draw page all show again.
 
 ---
 

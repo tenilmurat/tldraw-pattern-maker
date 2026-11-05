@@ -37,7 +37,7 @@ interface Placement {
   slot: number
 }
 
-interface Grid {
+export interface Grid {
   cw: number
   ch: number
   /** Cells before the arrangement repeats, across and down. */
@@ -45,7 +45,7 @@ interface Grid {
   place(i: number, j: number): Placement
 }
 
-function layoutGrid(layout: ShapeLayout, s: number, space: number, slots: number, seed: number): Grid {
+export function layoutGrid(layout: ShapeLayout, s: number, space: number, slots: number, seed: number): Grid {
   const c = s * (1 + gapFor(space))
   const diag = (i: number, j: number) => mod(i + j, slots)
 

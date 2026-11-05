@@ -7,7 +7,7 @@ const PATHS = parseLogo(raw)
 /** How long the settled logo stays before the page shows through. */
 const HOLD = 0.45
 
-type Phase = 'check' | 'ask' | 'play' | 'leaving' | 'gone'
+type Phase = 'ask' | 'play' | 'leaving' | 'gone'
 
 /** Play the motion into `svg` from `start` (a performance.now() time); calls `done` once the logo has settled. Returns stop. */
 function play(svg: SVGSVGElement | null, start: number, dotReady: boolean, done: () => void): () => void {
@@ -28,15 +28,15 @@ const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(pr
  * The opening screen: the logo's welcome motion with its sound, then it
  * fades away to the app.
  *
- * Browsers only allow sound after a visitor has clicked or pressed a key on
- * the page. When sound is already allowed, the welcome simply plays. When
- * it isn't, it waits on the black dot, pulsing softly, with a shimmering
- * "Click anywhere to start" below; that click lets the sound play, and the
- * motion carries on from the dot, still in step. Once playing, a click or
- * any key skips it; with reduced motion it doesn't play at all.
+ * It always opens the same way: the black dot, pulsing softly, with a
+ * shimmering "Click anywhere to start" and "by Murat" below. Browsers only
+ * allow sound after a click or a key press, so that click is also what lets
+ * the sound play, and the motion carries on from the dot, in step with it.
+ * Once playing, a click or any key skips it; with reduced motion it doesn't
+ * play at all.
  */
 export function Welcome({ onLeave }: { onLeave?: () => void }) {
-  const [phase, setPhase] = useState<Phase>(() => (reducedMotion() ? 'gone' : 'check'))
+  const [phase, setPhase] = useState<Phase>(() => (reducedMotion() ? 'gone' : 'ask'))
   const svgRef = useRef<SVGSVGElement>(null)
   const audioRef = useRef<WelcomeAudio | null>(null)
   // One start time for the motion and the sound, so the sound's peak lands on the mark's arrival.
@@ -55,23 +55,12 @@ export function Welcome({ onLeave }: { onLeave?: () => void }) {
     beginRef.current = begin
   })
 
-  // On opening: get the sound ready, and find out whether the browser allows it yet.
+  // On opening: load the sound, so it's ready by the time someone clicks.
   useEffect(() => {
     if (reducedMotion()) return
     const audio = createWelcomeAudio()
     audioRef.current = audio
-    const life = { alive: true }
-    if (!audio) beginRef.current(0, false)
-    else
-      void audio.allowed().then((ok) => {
-        if (!life.alive) return
-        if (ok) beginRef.current(0, false)
-        else setPhase('ask')
-      })
-    return () => {
-      life.alive = false
-      audio?.fadeOut()
-    }
+    return () => audio?.fadeOut()
   }, [])
 
   // Waiting for a click: the dot, pulsing. A key works too.
@@ -118,8 +107,7 @@ export function Welcome({ onLeave }: { onLeave?: () => void }) {
       // This click is what lets the sound play.
       audioRef.current?.unlock()
       begin(BLOOM_AT, true)
-    } else if (phase === 'check') begin(0, false)
-    else setPhase('leaving')
+    } else setPhase('leaving')
   }
   return (
     <div className={`welcome ${phase === 'leaving' ? 'is-leaving' : ''}`} onPointerDown={onPointerDown}>

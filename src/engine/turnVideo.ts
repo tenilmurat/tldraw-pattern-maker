@@ -8,6 +8,16 @@ export const TURN_SPEED = 45
 /** Keep an angle within -180..180, so a full turn wraps without a jump. */
 export const wrapAngle = (deg: number) => ((((deg + 180) % 360) + 360) % 360) - 180
 
+/** How many frames one full turn takes at `fps`. */
+export const turnFrameCount = (fps: number) => Math.round((360 / TURN_SPEED) * fps)
+
+/**
+ * The angle of every frame in one full turn. The last frame stops one step
+ * short of 360°, so the video's first frame follows it seamlessly when it loops.
+ */
+export const turnAngles = (from: number, frames: number) =>
+  Array.from({ length: frames }, (_, i) => wrapAngle(from + (360 * i) / frames))
+
 /**
  * Play the turn: the angle keeps rising at TURN_SPEED and wraps from 180 to
  * -180, which is the same position, so the loop never jumps. Returns stop.
@@ -39,7 +49,8 @@ export async function exportTurnMp4(
   const size = 1080
   const k = 2
   const fps = 30
-  const frames = Math.round((360 / TURN_SPEED) * fps)
+  const angles = turnAngles(from, turnFrameCount(fps))
+  const frames = angles.length
   if (!(await canEncodeVideo('avc', { width: size, height: size }))) {
     throw new Error('This browser can’t make MP4 videos. Try Chrome, Edge or Safari.')
   }
@@ -55,8 +66,7 @@ export async function exportTurnMp4(
   await output.start()
 
   for (let i = 0; i < frames; i++) {
-    // The last frame stops one step short of a full turn, so frame 0 follows it seamlessly.
-    paintCentred(ctx, rendererAt(wrapAngle(from + (360 * i) / frames)), size, size, k)
+    paintCentred(ctx, rendererAt(angles[i]), size, size, k)
     await source.add(i / fps, 1 / fps)
     onProgress((i + 1) / frames)
   }

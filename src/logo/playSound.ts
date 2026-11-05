@@ -8,8 +8,6 @@ const SOUND_PEAK = 0.44
 export const SOUND_AT = MARK_AT - SOUND_PEAK
 
 export interface WelcomeAudio {
-  /** Whether the browser already lets this page make sound (it waits a moment to find out). */
-  allowed(): Promise<boolean>
   /** Call inside a click or key press: that's what browsers need before they allow sound. */
   unlock(): void
   /** Play in step with the motion that began at `motionStart` (a performance.now() time). */
@@ -24,8 +22,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
  * The welcome sound, loaded and decoded straight away, then scheduled on the
  * Web Audio clock so its peak lands on the mark's arrival to the millisecond.
  * Browsers only allow sound once a visitor has clicked or pressed a key on
- * the page (often not on a first visit), so the welcome asks `allowed()`
- * first and, if not, waits for one click and calls `unlock()` inside it.
+ * the page, so the welcome waits for one click and calls `unlock()` inside it.
  */
 export function createWelcomeAudio(): WelcomeAudio | null {
   const AC = typeof window !== 'undefined' ? window.AudioContext : undefined
@@ -48,12 +45,6 @@ export function createWelcomeAudio(): WelcomeAudio | null {
   }
 
   return {
-    async allowed() {
-      if (running()) return true
-      // A new context may take a moment to start when sound is allowed.
-      await Promise.race([new Promise((r) => ctx.addEventListener('statechange', r, { once: true })), wait(150)])
-      return running()
-    },
     unlock() {
       void ctx.resume().catch(() => {})
     },

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import raw from '../assets/logo.svg?raw'
-import { BYLINE, LOGO, type LogoWord, logoWords, parseLogo, SWAP_LENGTH, swapFrame } from './motion'
+import { BYLINE, LOGO, type LogoWord, logoWords, parseLogo, SWAP_LENGTH, swapFrame, swapLength } from './motion'
 
 const PATHS = parseLogo(raw)
 const WORDS = logoWords(PATHS)
@@ -11,10 +11,11 @@ type Shown = 'logo' | 'byline'
 /** Play one swap into `svg`, frame by frame, then call `done`. */
 function playSwap(svg: SVGSVGElement, from: LogoWord[], to: LogoWord[], done: () => void) {
   const start = performance.now()
+  const length = swapLength(to)
   const step = (now: number) => {
-    const t = Math.min((now - start) / 1000, SWAP_LENGTH)
+    const t = Math.min((now - start) / 1000, length)
     svg.innerHTML = swapFrame(t, PATHS, from, to)
-    if (t < SWAP_LENGTH) requestAnimationFrame(step)
+    if (t < length) requestAnimationFrame(step)
     else done()
   }
   requestAnimationFrame(step)
@@ -25,8 +26,8 @@ const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(pr
 /**
  * The header logo. Hover it and the words swap for a credit, "designed by
  * Murat"; leave and "tldraw pattern" comes back. The mark stays put; the
- * words fade out and the new ones wipe in, as they do in the welcome. A swap
- * never cuts itself short: if you leave mid-swap, the way back plays after it.
+ * words fade out and the new ones wipe in, as they do in the welcome, and a
+ * colour band sweeps once through the credit. A swap never cuts itself short: if you leave mid-swap, the way back plays after it.
  */
 export function LogoMark({ height = 24 }: { height?: number }) {
   const ref = useRef<SVGSVGElement>(null)
@@ -40,7 +41,7 @@ export function LogoMark({ height = 24 }: { height?: number }) {
     if (!svg || playing.current || to === shown.current) return
     const [from, next] = to === 'byline' ? [WORDS, BYLINE] : [BYLINE, WORDS]
     if (reducedMotion()) {
-      svg.innerHTML = swapFrame(SWAP_LENGTH, PATHS, from, next)
+      svg.innerHTML = swapFrame(swapLength(next), PATHS, from, next)
       shown.current = to
       return
     }
