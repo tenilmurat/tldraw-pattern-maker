@@ -49,7 +49,8 @@ Each decision above has tests in `src/test/`, so a change that breaks one fails 
 | `colour.test.ts` | Across 2,000 random palettes, the strongest ink always has at least 4.5:1 contrast with the paper (the WCAG bar for text), the paper shares the ink's hue, and the same seed gives the same palette. Every named palette has an ink that stands out. |
 | `controls.test.ts` | No jargon in any name or hint people see. Zoom and Size are the same control. Surprise me always stays in good ranges in every mode. Every visit opens on a new pattern and keeps your Draw, Photo and Paper settings. Opening your tile keeps the same shapes. |
 | `output.test.ts` | A4 is A4 at 300 dpi, and 5 mm on the paper grid prints as 5 mm. The video is 240 frames, and its last frame leads into the first with no jump. |
-| `firstVisit.test.ts` | Draw opens on a clean page, the tour runs in its order, and the logo hover ends on "designed by Murat", with a colour band sweeping through it once, and back. |
+| `firstVisit.test.ts` | Draw opens on a clean page, the tour runs in its order, and hovering the logo shows "designed by Murat" in Inter Regular, never overlapping the logo's own words. |
+| `logoMark.test.tsx` | The hover follows the mouse: "designed by Murat" while it's over the logo, the plain logo once it leaves, turning straight back if it leaves midway, and still landing right if the mouse flicks in and out or the browser stops sending frames. |
 | `welcome.test.tsx` | The opening screen always waits on "Click anywhere to start" with "by Murat", and a click or a key starts the logo. |
 
 Pixels aren't tested: the tests run without a real canvas and check where things go, not how they look.

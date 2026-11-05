@@ -1,63 +1,69 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import raw from '../assets/logo.svg?raw'
-import { BYLINE, LOGO, type LogoWord, logoWords, parseLogo, SWAP_LENGTH, swapFrame, swapLength } from './motion'
+import { creditFrame, LOGO, parseLogo, SWAP_LENGTH } from './motion'
 
 const PATHS = parseLogo(raw)
-const WORDS = logoWords(PATHS)
-const STILL = swapFrame(SWAP_LENGTH, PATHS, WORDS, WORDS)
-
-type Shown = 'logo' | 'byline'
-
-/** Play one swap into `svg`, frame by frame, then call `done`. */
-function playSwap(svg: SVGSVGElement, from: LogoWord[], to: LogoWord[], done: () => void) {
-  const start = performance.now()
-  const length = swapLength(to)
-  const step = (now: number) => {
-    const t = Math.min((now - start) / 1000, length)
-    svg.innerHTML = swapFrame(t, PATHS, from, to)
-    if (t < length) requestAnimationFrame(step)
-    else done()
-  }
-  requestAnimationFrame(step)
-}
+const STILL = creditFrame(0, PATHS)
 
 const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
- * The header logo. Hover it and the words swap for a credit, "designed by
- * Murat"; leave and "tldraw pattern" comes back. The mark stays put; the
- * words fade out and the new ones wipe in, as they do in the welcome, and a
- * colour band sweeps once through the credit. A swap never cuts itself short: if you leave mid-swap, the way back plays after it.
+ * The header logo. Hover it and "tldraw pattern" gives way to a credit,
+ * "designed by Murat"; leave and the logo comes back. The swap follows the
+ * mouse: it heads for the credit while you're over the logo and back as soon
+ * as you leave, turning around from wherever it is, so nothing waits to
+ * finish and nothing is left half drawn.
  */
 export function LogoMark({ height = 24 }: { height?: number }) {
   const ref = useRef<SVGSVGElement>(null)
-  const shown = useRef<Shown>('logo')
-  const wanted = useRef<Shown>('logo')
-  const playing = useRef(false)
+  // How far the swap has gone (0 = logo, 1 = credit), and where it's heading.
+  const at = useRef(0)
+  const target = useRef(0)
+  // The frame loop while it moves, and a safety timer in case frames stop coming.
+  const loop = useRef<{ raf: number; last: number } | null>(null)
+  const safety = useRef(0)
 
-  const settle = () => {
-    const svg = ref.current
-    const to = wanted.current
-    if (!svg || playing.current || to === shown.current) return
-    const [from, next] = to === 'byline' ? [WORDS, BYLINE] : [BYLINE, WORDS]
-    if (reducedMotion()) {
-      svg.innerHTML = swapFrame(swapLength(next), PATHS, from, next)
-      shown.current = to
-      return
-    }
-    playing.current = true
-    playSwap(svg, from, next, () => {
-      shown.current = to
-      playing.current = false
-      // The pointer may have come or gone while this played.
-      settle()
-    })
+  const draw = () => {
+    if (ref.current) ref.current.innerHTML = creditFrame(at.current, PATHS)
   }
 
-  const want = (s: Shown) => {
-    wanted.current = s
-    settle()
+  const stop = () => {
+    if (loop.current) cancelAnimationFrame(loop.current.raf)
+    loop.current = null
+    clearTimeout(safety.current)
   }
+
+  /** Jump straight to where it's heading: the end of a move, or the safety net. */
+  const land = () => {
+    stop()
+    at.current = target.current
+    draw()
+  }
+
+  const step = (now: number) => {
+    const run = loop.current
+    // A frame that arrives after the move has ended must not draw over it.
+    if (!run) return
+    const move = Math.max(0, now - run.last) / 1000 / SWAP_LENGTH
+    run.last = now
+    const dir = Math.sign(target.current - at.current)
+    at.current += dir * move
+    if (dir === 0 || (target.current - at.current) * dir <= 0) return land()
+    draw()
+    run.raf = requestAnimationFrame(step)
+  }
+
+  const head = (to: number) => {
+    target.current = to
+    if (reducedMotion()) return land()
+    // Wherever it is now, it can't need longer than one full swap to get there.
+    clearTimeout(safety.current)
+    safety.current = window.setTimeout(land, SWAP_LENGTH * 1000 + 300)
+    if (!loop.current) loop.current = { raf: requestAnimationFrame(step), last: performance.now() }
+  }
+
+  // Leaving the page mid-swap must not leave a frame loop or timer running.
+  useEffect(() => stop, [])
 
   return (
     <svg
@@ -68,8 +74,8 @@ export function LogoMark({ height = 24 }: { height?: number }) {
       width={(height * LOGO.w) / LOGO.h}
       role="img"
       aria-label="tldraw pattern, designed by Murat"
-      onPointerEnter={() => want('byline')}
-      onPointerLeave={() => want('logo')}
+      onPointerEnter={() => head(1)}
+      onPointerLeave={() => head(0)}
       dangerouslySetInnerHTML={{ __html: STILL }}
     />
   )

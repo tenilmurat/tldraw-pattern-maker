@@ -167,8 +167,6 @@ export interface LogoWord {
   x1: number
   dx: number
   dy: number
-  /** Where the text runs (start and width), when a colour band sweeps through it after it arrives. */
-  sweep?: { x: number; w: number }
 }
 
 /** The logo's own words: "tldraw" slides in from the left, "pattern" rises up. */
@@ -179,108 +177,43 @@ export const logoWords = (paths: LogoPaths): LogoWord[] => [
 
 /**
  * The credit shown while you hover the header logo: "designed by Murat" in
- * Inter Regular, as one line that wipes in as one piece, centred on the mark
- * with a wider gap after it than the logo's own words. Sizes are in logo units.
+ * Inter Regular, as one line, centred on the mark with a wider gap after it
+ * than the logo's own words. Sizes are in logo units.
  */
-export const BYLINE: LogoWord[] = [
-  {
-    markup: `<text x="86" y="46" font-family="Inter, sans-serif" font-weight="400" font-size="38">designed by Murat</text>`,
-    x0: 84,
-    x1: 436,
-    dx: -10,
-    dy: 0,
-    sweep: { x: 86, w: 336 },
-  },
-]
-
-/**
- * The colour band that sweeps through the credit once it has arrived, the
- * same one as "Surprise me" on build.studiorekt.com: pink, coral, yellow,
- * light blue and blue, passing left to right through ink and leaving ink.
- */
-export const SWEEP_COLOURS = ['#c99ac6', '#ee7059', '#f0b94e', '#b6c7ea', '#5c8fe2']
-/** When the sweep starts (as the credit finishes wiping in) and how long it takes, in seconds. */
-const SWEEP_AT = 0.65
-const SWEEP_LENGTH = 0.7
-
-/** CSS's cubic-bezier(x1, y1, x2, y2), as an easing function of 0..1. */
-function bezier(x1: number, y1: number, x2: number, y2: number) {
-  const at = (a: number, b: number, s: number) => 3 * a * s * (1 - s) ** 2 + 3 * b * s * s * (1 - s) + s ** 3
-  return (x: number) => {
-    // Find the curve's parameter for this x (Newton's method), then read its y.
-    let s = x
-    for (let k = 0; k < 8; k++) {
-      const dx = at(x1, x2, s) - x
-      const slope = 3 * x1 * (1 - s) ** 2 + 6 * (x2 - x1) * s * (1 - s) + 3 * (1 - x2) * s * s
-      if (Math.abs(dx) < 1e-6 || slope === 0) break
-      s = Math.min(1, Math.max(0, s - dx / slope))
-    }
-    return at(y1, y2, s)
-  }
-}
-/** The sweep's easing on build.studiorekt.com. */
-const sweepEase = bezier(0.4, 0, 0.2, 1)
-
-/**
- * The band at `p` (0..1 through the sweep), as an SVG gradient across text
- * starting at `x`, `w` wide. Like the site's CSS, the gradient is three times
- * the text's width and slides from right to left behind it; here both ends
- * are ink, so the text is ink before and after and only the band shows colour.
- */
-function sweepGradient(id: string, { x, w }: { x: number; w: number }, p: number) {
-  const left = x - 2 * w * (1 - p)
-  const stops = [
-    [0.334, INK],
-    [0.4, SWEEP_COLOURS[0]],
-    [0.45, SWEEP_COLOURS[1]],
-    [0.5, SWEEP_COLOURS[2]],
-    [0.55, SWEEP_COLOURS[3]],
-    [0.6, SWEEP_COLOURS[4]],
-    [0.666, INK],
-  ] as const
-  return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${f(left)}" y1="0" x2="${f(left + 3 * w)}" y2="0">${stops
-    .map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`)
-    .join('')}</linearGradient>`
+export const CREDIT: LogoWord = {
+  markup: `<text x="86" y="46" font-family="Inter, sans-serif" font-weight="400" font-size="38">designed by Murat</text>`,
+  x0: 84,
+  x1: 436,
+  dx: -10,
+  dy: 0,
 }
 
+/** Seconds for a full swap from the logo to the credit (or back). */
+export const SWAP_LENGTH = 0.8
+
 /**
- * The header logo's word swap, when you hover it and when you leave: the
- * mark stays exactly where it is, the words showing fade out quickly, then
- * the new words wipe in one after the other, the way the logo's words arrive
- * in the welcome. The credit then has a colour band sweep through it once.
- * At `t >= swapLength(to)` it is still, showing `to`.
+ * The header logo between its words and the credit, at `p` from 0 (the
+ * plain logo) to 1 ("designed by Murat"). The mark never moves. Going up,
+ * "pattern" then "tldraw" draw back to the left, and the credit wipes in from
+ * the left; going down plays the same frames in reverse, so the logo's words
+ * wipe back in the way they arrive in the welcome. Because every frame is a
+ * function of `p` alone, a hover can turn around at any moment without a jump.
  */
-export const SWAP_LENGTH = 1.0
-
-/** How long a swap to `to` lasts: longer when the new words end with a colour sweep. */
-export const swapLength = (to: LogoWord[]) => (to.some((w) => w.sweep) ? SWEEP_AT + SWEEP_LENGTH : SWAP_LENGTH)
-
-export function swapFrame(t: number, paths: LogoPaths, from: LogoWord[], to: LogoWord[]): string {
+export function creditFrame(p: number, paths: LogoPaths): string {
   const parts: string[] = []
-  const word = (w: LogoWord, id: string, wipe: number, opacity: number, shift: number, sweep = 0) => {
-    if (opacity <= 0 || wipe <= 0) return
-    // While the band is passing through, the text is filled with it; otherwise plain ink.
-    const banded = w.sweep && sweep > 0 && sweep < 1
-    const fill = banded ? `url(#${id}-sweep)` : INK
+  const word = (w: LogoWord, id: string, v: number) => {
+    if (v <= 0) return
     parts.push(
-      `<clipPath id="${id}"><rect x="${w.x0}" y="-10" width="${f((w.x1 - w.x0) * wipe)}" height="120"/></clipPath>`,
-      banded ? sweepGradient(`${id}-sweep`, w.sweep!, sweepEase(sweep)) : '',
-      `<g clip-path="url(#${id})"><g fill="${fill}" fill-opacity="${f(opacity)}" transform="translate(${f(w.dx * shift)} ${f(w.dy * shift)})">${w.markup}</g></g>`,
+      `<clipPath id="${id}"><rect x="${w.x0}" y="-10" width="${f((w.x1 - w.x0) * v)}" height="120"/></clipPath>`,
+      `<g clip-path="url(#${id})"><g fill="${INK}" fill-opacity="${f(v)}" transform="translate(${f(w.dx * (1 - v))} ${f(w.dy * (1 - v))})">${w.markup}</g></g>`,
     )
   }
-  if (t < 0.15) {
-    // The words showing dissolve first...
-    const gone = easeInOut(span(t, 0, 0.15))
-    from.forEach((w, i) => word(w, `logo-out-${i}`, 1, 1 - gone, 0))
-  } else {
-    // ...then the new ones come in, one after the other.
-    // A single line takes the whole time, in one smooth sweep.
-    const one = to.length === 1
-    to.forEach((w, i) => {
-      const v = easeOut(one ? span(t, 0.2, 0.95) : span(t, 0.2 + 0.2 * i, 0.65 + 0.3 * i))
-      word(w, `logo-in-${i}`, v, v, 1 - v, span(t, SWEEP_AT, SWEEP_AT + SWEEP_LENGTH))
-    })
-  }
+  const [tldraw, pattern] = logoWords(paths)
+  // The logo's words leave first, "pattern" a little before "tldraw"...
+  word(tldraw, 'logo-tldraw', easeOut(1 - span(p, 0.12, 0.42)))
+  word(pattern, 'logo-pattern', easeOut(1 - span(p, 0, 0.3)))
+  // ...then the credit comes in.
+  word(CREDIT, 'logo-credit', easeOut(span(p, 0.45, 1)))
   // The mark stays as it is.
   parts.push(
     `<path d="${paths.bg}" fill="${INK}"/>`,

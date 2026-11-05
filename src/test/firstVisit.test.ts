@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest'
 import raw from '../assets/logo.svg?raw'
 import { TOUR_STEPS } from '../components/tourSteps'
-import { BYLINE, logoWords, parseLogo, SWAP_LENGTH, SWEEP_COLOURS, swapFrame, swapLength } from '../logo/motion'
+import { creditFrame, parseLogo } from '../logo/motion'
 import { initialState } from '../state/reducer'
 
 describe('Draw', () => {
@@ -29,43 +29,31 @@ describe('First-visit tour', () => {
 
 describe('Header logo', () => {
   const paths = parseLogo(raw)
-  const words = logoWords(paths)
 
-  test('hovering ends on "designed by Murat", in Inter Regular, as one line', () => {
-    const end = swapFrame(swapLength(BYLINE), paths, words, BYLINE)
-    expect(BYLINE).toHaveLength(1)
-    expect(end).toContain('designed by Murat')
-    expect(end).toContain('font-weight="400"')
-    expect(end).not.toContain(paths.tldraw)
+  test('at rest it is the plain logo', () => {
+    const rest = creditFrame(0, paths)
+    expect(rest).toContain(paths.tldraw)
+    expect(rest).toContain(paths.pattern)
+    expect(rest).not.toContain('designed by Murat')
   })
 
-  test('leaving ends back on "tldraw pattern"', () => {
-    const end = swapFrame(SWAP_LENGTH, paths, BYLINE, words)
-    expect(end).toContain(paths.tldraw)
-    expect(end).toContain(paths.pattern)
-    expect(end).not.toContain('designed by Murat')
+  test('fully hovered it shows "designed by Murat" in Inter Regular, as one line, with no colour', () => {
+    const credit = creditFrame(1, paths)
+    expect(credit).toContain('designed by Murat')
+    expect(credit).toContain('font-family="Inter, sans-serif" font-weight="400"')
+    expect(credit).not.toContain(paths.tldraw)
+    expect(credit).not.toContain(paths.pattern)
+    expect(credit).not.toContain('Gradient')
   })
 
-  test('once it has arrived, a colour band sweeps through the credit, like Surprise me on build.studiorekt.com', () => {
-    const mid = swapFrame(1.0, paths, words, BYLINE)
-    for (const c of SWEEP_COLOURS) expect(mid).toContain(c)
-    expect(mid).toContain('fill="url(#logo-in-0-sweep)"')
-  })
-
-  test('the band moves left to right, then the credit settles on plain ink', () => {
-    const bandLeft = (t: number) => Number(swapFrame(t, paths, words, BYLINE).match(/<linearGradient[^>]* x1="([-\d.]+)"/)![1])
-    expect(bandLeft(0.8)).toBeLessThan(bandLeft(1.0))
-    expect(bandLeft(1.0)).toBeLessThan(bandLeft(1.2))
-    const end = swapFrame(swapLength(BYLINE), paths, words, BYLINE)
-    expect(end).not.toContain('linearGradient')
-  })
-
-  test('going back to "tldraw pattern" has no sweep and takes the usual time', () => {
-    expect(swapLength(words)).toBe(SWAP_LENGTH)
-    for (const t of [0.3, 0.6, 0.9]) expect(swapFrame(t, paths, BYLINE, words)).not.toContain('linearGradient')
+  test('the logo words leave before the credit arrives, so they never overlap', () => {
+    for (let p = 0; p <= 1; p += 0.01) {
+      const frame = creditFrame(p, paths)
+      expect(frame.includes(paths.tldraw) && frame.includes('designed by Murat')).toBe(false)
+    }
   })
 
   test('the mark stays put the whole time', () => {
-    for (const t of [0, 0.1, 0.3, 0.6, SWAP_LENGTH]) expect(swapFrame(t, paths, words, BYLINE)).toContain(paths.bg)
+    for (const p of [0, 0.2, 0.5, 0.8, 1]) expect(creditFrame(p, paths)).toContain(paths.bg)
   })
 })
