@@ -25,6 +25,6 @@ export const TOUR_STEPS: TourStep[] = [
   {
     target: '.actions .button',
     title: 'Save it when you love it',
-    body: 'Download your pattern as a picture: square for posts, wide for screens, or A4 ready to print.',
+    body: 'Download your pattern as a picture, sized for posts, screens and wallpapers.',
   },
 ]
