@@ -1,4 +1,30 @@
-# Instructions
+# tldraw pattern
+
+A small web app for making a repeating pattern out of shapes, made for someone who isn't a designer.
+
+## Running it
+
+You need Node 20.19 or newer (22 or 24 is fine).
+
+```bash
+npm ci
+npm run dev
+```
+
+Then open the address it prints (usually http://localhost:5173).
+
+To try the production build:
+
+```bash
+npm run build
+npm run preview
+```
+
+The Draw mode uses the tldraw SDK. tldraw runs without a licence key on localhost, so both commands above work as they are. A deploy on a real domain needs a key in `VITE_TLDRAW_LICENSE_KEY`.
+
+---
+
+## The brief
 
 Create a **pattern maker**: a small web app for making a repeating pattern out of shapes.
 
