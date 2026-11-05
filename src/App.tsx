@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import { Panel } from './components/Panel'
 import { Preview } from './components/Preview'
 import { TopBar } from './components/TopBar'
+import { Tour } from './components/Tour'
 import { Welcome } from './logo/Welcome'
 import { createRenderer } from './engine/createRenderer'
 import { createSampleImage, loadImage, type PhotoImage } from './engine/photo'
@@ -31,8 +32,16 @@ function loadSaved(fallback: PatternState): PatternState {
   }
 }
 
+/**
+ * Every visit opens on a new pattern: Shapes, with a fresh "Surprise me".
+ * Draw, Photo and Paper keep what you left there.
+ */
+function openState(fallback: PatternState): PatternState {
+  return reducer({ ...loadSaved(fallback), mode: 'shapes' }, { type: 'surprise' })
+}
+
 const App = () => {
-  const [state, dispatch] = useReducer(reducer, initialState, loadSaved)
+  const [state, dispatch] = useReducer(reducer, initialState, openState)
   const sample = useMemo(() => createSampleImage(), [])
   const [userPhoto, setUserPhoto] = useState<{ src: string; image: PhotoImage } | null>(null)
 
@@ -53,9 +62,16 @@ const App = () => {
 
   // First load: the page arrives in a gentle cascade as the welcome fades, once.
   const [arriving, setArriving] = useState(false)
+  // The first-visit tour waits until the page has arrived (straight away with reduced motion, which has no welcome).
+  const [settled, setSettled] = useState(
+    () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
   const arrive = useCallback(() => {
     setArriving(true)
-    window.setTimeout(() => setArriving(false), 1800)
+    window.setTimeout(() => {
+      setArriving(false)
+      setSettled(true)
+    }, 1800)
   }, [])
   // A picture of the drawing in the tldraw frame. Not saved: tldraw keeps the drawing itself.
   const [art, setArt] = useState<DrawArt | null>(null)
@@ -116,6 +132,7 @@ const App = () => {
       <Preview renderer={renderer} state={state} dispatch={dispatch} art={art} onArt={setArt} />
       <TopBar state={state} dispatch={dispatch} renderer={renderer} />
       <Panel state={state} dispatch={dispatch} photo={photo} art={art} />
+      <Tour ready={settled} />
       <Welcome onLeave={arrive} />
     </main>
   )

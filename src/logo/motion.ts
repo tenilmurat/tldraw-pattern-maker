@@ -160,31 +160,66 @@ export function welcomeSvg(t: number, paths: LogoPaths, size?: { width: number; 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}"${dims} preserveAspectRatio="xMidYMid slice">${bg}${welcomeFrame(t, paths)}</svg>`
 }
 
-/**
- * The header logo's replay, when you hover it: the mark stays exactly where
- * it is, and only the words play again. "tldraw" and "pattern" fade out
- * quickly, then wipe back in the way they arrive in the welcome. At
- * `t >= REPLAY_LENGTH` it is exactly the static logo.
- */
-export const REPLAY_LENGTH = 1.0
+/** One word of the header logo, as SVG markup plus the band it wipes in across and where it slides in from. */
+export interface LogoWord {
+  markup: string
+  x0: number
+  x1: number
+  dx: number
+  dy: number
+}
 
-export function replayFrame(t: number, paths: LogoPaths): string {
+/** The logo's own words: "tldraw" slides in from the left, "pattern" rises up. */
+export const logoWords = (paths: LogoPaths): LogoWord[] => [
+  { markup: `<path d="${paths.tldraw}" fill-rule="evenodd"/>`, x0: LOGO.tldraw[0], x1: LOGO.tldraw[1], dx: -10, dy: 0 },
+  { markup: `<path d="${paths.pattern}" fill-rule="evenodd"/>`, x0: LOGO.pattern[0], x1: LOGO.pattern[1], dx: 0, dy: 6 },
+]
+
+/**
+ * The credit shown while you hover the header logo: "designed by Murat" in
+ * Inter Regular, as one line that wipes in as one piece, centred on the mark
+ * with a wider gap after it than the logo's own words. Sizes are in logo units.
+ */
+export const BYLINE: LogoWord[] = [
+  {
+    markup: `<text x="86" y="46" font-family="Inter, sans-serif" font-weight="400" font-size="38">designed by Murat</text>`,
+    x0: 84,
+    x1: 436,
+    dx: -10,
+    dy: 0,
+  },
+]
+
+/**
+ * The header logo's word swap, when you hover it and when you leave: the
+ * mark stays exactly where it is, the words showing fade out quickly, then
+ * the new words wipe in one after the other, the way the logo's words arrive
+ * in the welcome. At `t >= SWAP_LENGTH` it is still, showing `to`.
+ */
+export const SWAP_LENGTH = 1.0
+
+export function swapFrame(t: number, paths: LogoPaths, from: LogoWord[], to: LogoWord[]): string {
   const parts: string[] = []
-  // The words dissolve first, then come back one after the other.
-  const gone = easeInOut(span(t, 0, 0.15))
-  const back = t >= 0.15
-  const word = (d: string, v: number, x0: number, x1: number, dx: number, dy: number, id: string) => {
-    const wipe = back ? v : 1
-    const opacity = back ? v : 1 - gone
+  const word = (w: LogoWord, id: string, wipe: number, opacity: number, shift: number) => {
     if (opacity <= 0 || wipe <= 0) return
-    const shift = back ? 1 - v : 0
     parts.push(
-      `<clipPath id="${id}"><rect x="${x0}" y="-10" width="${f((x1 - x0) * wipe)}" height="120"/></clipPath>`,
-      `<g clip-path="url(#${id})"><path d="${d}" fill="${INK}" fill-rule="evenodd" fill-opacity="${f(opacity)}" transform="translate(${f(dx * shift)} ${f(dy * shift)})"/></g>`,
+      `<clipPath id="${id}"><rect x="${w.x0}" y="-10" width="${f((w.x1 - w.x0) * wipe)}" height="120"/></clipPath>`,
+      `<g clip-path="url(#${id})"><g fill="${INK}" fill-opacity="${f(opacity)}" transform="translate(${f(w.dx * shift)} ${f(w.dy * shift)})">${w.markup}</g></g>`,
     )
   }
-  word(paths.tldraw, easeOut(span(t, 0.2, 0.65)), LOGO.tldraw[0], LOGO.tldraw[1], -10, 0, 'replay-tldraw')
-  word(paths.pattern, easeOut(span(t, 0.4, 0.95)), LOGO.pattern[0], LOGO.pattern[1], 0, 6, 'replay-pattern')
+  if (t < 0.15) {
+    // The words showing dissolve first...
+    const gone = easeInOut(span(t, 0, 0.15))
+    from.forEach((w, i) => word(w, `logo-out-${i}`, 1, 1 - gone, 0))
+  } else {
+    // ...then the new ones come in, one after the other.
+    // A single line takes the whole time, in one smooth sweep.
+    const one = to.length === 1
+    to.forEach((w, i) => {
+      const v = easeOut(one ? span(t, 0.2, 0.95) : span(t, 0.2 + 0.2 * i, 0.65 + 0.3 * i))
+      word(w, `logo-in-${i}`, v, v, 1 - v)
+    })
+  }
   // The mark stays as it is.
   parts.push(
     `<path d="${paths.bg}" fill="${INK}"/>`,

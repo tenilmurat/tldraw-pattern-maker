@@ -124,7 +124,12 @@ export function Welcome({ onLeave }: { onLeave?: () => void }) {
   return (
     <div className={`welcome ${phase === 'leaving' ? 'is-leaving' : ''}`} onPointerDown={onPointerDown}>
       <svg ref={svgRef} className="welcome-stage" viewBox={`${x} ${y} ${w} ${h}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
-      {phase === 'ask' && <p className="welcome-ask">Click anywhere to start</p>}
+      {phase === 'ask' && (
+        <>
+          <p className="welcome-ask">Click anywhere to start</p>
+          <p className="welcome-by">by Murat</p>
+        </>
+      )}
     </div>
   )
 }
