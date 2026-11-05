@@ -224,8 +224,8 @@ function nearestColour(editor: Editor, hex: string): TLDefaultColorStyle {
 const STROKE = { s: 2, m: 3.5, l: 5, xl: 10 }
 
 /**
- * Bring lines drawn before the canvas was tldraw (the starter sprig, or a
- * saved drawing) into tldraw as draw shapes, so nothing you made is lost.
+ * Bring lines drawn before the canvas was tldraw (a drawing saved
+ * by an earlier version) into tldraw as draw shapes, so nothing you made is lost.
  */
 export function importStrokes(editor: Editor, strokes: Stroke[]) {
   const shapes: TLShapePartial[] = strokes

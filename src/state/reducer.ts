@@ -1,5 +1,4 @@
 import { harmoniousPalette, PALETTES, WHITE, type Palette } from '../engine/color'
-import { starterStrokes } from '../engine/draw'
 import { MOTIFS } from '../engine/motifs'
 import { PENS, type PenId } from '../engine/pens'
 import { PAPERS } from '../engine/paper'
@@ -37,7 +36,8 @@ export const initialState: PatternState = {
     rotation: 0,
     turned: 0,
     symmetry: 'kaleido',
-    strokes: starterStrokes(),
+    // Draw opens on a clean page.
+    strokes: [],
     past: [],
     future: [],
     pen: 'pen',

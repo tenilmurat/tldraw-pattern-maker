@@ -214,33 +214,3 @@ export function withLiveStroke(base: DrawRenderer, live: Stroke, o: DrawOptions)
   })
 }
 
-/** A starter drawing so Draw never opens on an empty page. */
-export function starterStrokes(): Stroke[] {
-  const curve = (
-    id: number,
-    pen: Stroke['pen'],
-    f: (t: number) => [number, number],
-    size: number,
-    colour: string,
-    w: (t: number) => number = () => 1,
-  ): Stroke => ({
-    id,
-    pen,
-    size,
-    colour,
-    opacity: PEN[pen].opacity,
-    points: Array.from({ length: 32 }, (_, i) => {
-      const t = i / 31
-      const [x, y] = f(t)
-      return [x, y, w(t)]
-    }),
-  })
-  // A small sprig in the middle of the canvas.
-  return [
-    curve(1, 'brush', (t) => [0.5 + Math.sin(t * Math.PI) * 0.04, 0.78 - t * 0.46], 0.035, '#3f9a50', (t) => 1 - t * 0.6),
-    curve(2, 'brush', (t) => [0.5 + t * 0.2, 0.6 - Math.sin(t * Math.PI) * 0.08 - t * 0.05], 0.06, '#88b93a', (t) => Math.sin(t * Math.PI)),
-    curve(3, 'brush', (t) => [0.5 - t * 0.18, 0.5 - Math.sin(t * Math.PI) * 0.07 - t * 0.06], 0.055, '#88b93a', (t) => Math.sin(t * Math.PI)),
-    curve(4, 'marker', (t) => [0.52 + Math.cos(t * Math.PI * 2) * 0.03, 0.27 + Math.sin(t * Math.PI * 2) * 0.03], 0.045, '#f0a92e'),
-    curve(5, 'fineliner', (t) => [0.3 + t * 0.08, 0.8 - Math.sin(t * Math.PI) * 0.04], 0.008, '#151515'),
-  ]
-}
