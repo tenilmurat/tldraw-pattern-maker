@@ -1,4 +1,4 @@
-import { harmoniousPalette, PALETTES, type Palette } from '../engine/color'
+import { harmoniousPalette, PALETTES, WHITE, type Palette } from '../engine/color'
 import { starterStrokes } from '../engine/draw'
 import { MOTIFS } from '../engine/motifs'
 import { DEFAULT_HIGHLIGHT, PEN, PENS, type PenId } from '../engine/pens'
@@ -22,6 +22,7 @@ export const initialState: PatternState = {
   mode: 'shapes',
   size: 0.32,
   palette: PALETTES[0],
+  modePalettes: { draw: WHITE, paper: WHITE },
   seed: 7,
   shapes: {
     active: ['leaf', 'dot', 'arch'],
@@ -94,6 +95,17 @@ export type Action =
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
+/** The colours the current mode uses: Draw and Paper have their own, everything else shares Shapes'. */
+export const paletteOf = (state: PatternState, mode: Mode = state.mode): Palette =>
+  mode === 'draw' || mode === 'paper' ? state.modePalettes[mode] : state.palette
+
+/** Change the colours of the current mode only. */
+function withPalette(state: PatternState, palette: Palette): PatternState {
+  const mode = state.mode
+  if (mode === 'draw' || mode === 'paper') return { ...state, modePalettes: { ...state.modePalettes, [mode]: palette } }
+  return { ...state, palette }
+}
+
 /** Replace the drawing and keep the old one for undo. */
 function commit(state: PatternState, strokes: Stroke[]): PatternState {
   return {
@@ -125,12 +137,10 @@ function surprise(state: PatternState): PatternState {
       }
     }
     case 'draw':
-      return {
-        ...state,
-        seed,
+      return withPalette(
+        { ...state, seed, draw: { ...state.draw, symmetry: pick(rand, DRAW_SYMMETRIES.slice(1)) } },
         palette,
-        draw: { ...state.draw, symmetry: pick(rand, DRAW_SYMMETRIES.slice(1)) },
-      }
+      )
     case 'photo':
       return {
         ...state,
@@ -148,12 +158,10 @@ function surprise(state: PatternState): PatternState {
       }
     case 'paper': {
       const paper = pick(rand, PAPERS)
-      return {
-        ...state,
-        seed,
+      return withPalette(
+        { ...state, seed, paper: { ...state.paper, kind: paper.id, spacingMm: paper.defaultMm } },
         palette,
-        paper: { ...state.paper, kind: paper.id, spacingMm: paper.defaultMm },
-      }
+      )
     }
   }
 }
@@ -228,22 +236,19 @@ export function reducer(state: PatternState, action: Action): PatternState {
     case 'size':
       return { ...state, size: action.value }
     case 'palette':
-      return { ...state, palette: action.palette }
+      return withPalette(state, action.palette)
     case 'shufflePalette': {
       const seed = newSeed()
-      return { ...state, seed, palette: harmoniousPalette(createRand(seed)) }
+      return withPalette({ ...state, seed }, harmoniousPalette(createRand(seed)))
     }
     case 'editColour': {
       // Your own edit turns the set into "Yours", so it never pretends to be a named set.
-      const { paper, inks } = state.palette
-      return {
-        ...state,
-        palette: {
-          name: 'Yours',
-          paper: action.slot === 'paper' ? action.colour : paper,
-          inks: inks.map((c, i) => (i === action.slot ? action.colour : c)),
-        },
-      }
+      const { paper, inks } = paletteOf(state)
+      return withPalette(state, {
+        name: 'Yours',
+        paper: action.slot === 'paper' ? action.colour : paper,
+        inks: inks.map((c, i) => (i === action.slot ? action.colour : c)),
+      })
     }
     case 'surprise':
       return surprise(state)

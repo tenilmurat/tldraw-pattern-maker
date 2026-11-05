@@ -3,6 +3,7 @@ import { createPaperRenderer } from './paper'
 import { createPhotoRenderer, type PhotoImage } from './photo'
 import type { Renderer } from './renderer'
 import { createShapeRenderer } from './shapes'
+import { paletteOf } from '../state/reducer'
 import type { PatternState } from '../state/types'
 import type { DrawArt } from './tldraw'
 
@@ -21,7 +22,7 @@ export function createRenderer(state: PatternState, photo: PhotoImage, art: Draw
         strokes: state.draw.strokes,
         symmetry: state.draw.symmetry,
         size: state.size,
-        paper: state.palette.paper,
+        paper: paletteOf(state, 'draw').paper,
         rotation: state.draw.rotation,
         art,
         turned: state.draw.turned,
@@ -34,6 +35,6 @@ export function createRenderer(state: PatternState, photo: PhotoImage, art: Draw
         size: state.size,
       })
     case 'paper':
-      return createPaperRenderer({ ...state.paper, palette: state.palette })
+      return createPaperRenderer({ ...state.paper, palette: paletteOf(state, 'paper') })
   }
 }

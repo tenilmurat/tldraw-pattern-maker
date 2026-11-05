@@ -1,15 +1,17 @@
 import type { Dispatch } from 'react'
-import { PALETTES } from '../engine/color'
-import type { Action } from '../state/reducer'
+import { PALETTES, WHITE } from '../engine/color'
+import { paletteOf, type Action } from '../state/reducer'
 import type { PatternState } from '../state/types'
 import { Icons, Section } from './controls'
 
 /** Named colour sets plus one Shuffle that only ever produces sets that go together. */
 export function ColoursSection({ state, dispatch }: { state: PatternState; dispatch: Dispatch<Action> }) {
-  const current = state.palette
+  const current = paletteOf(state)
   const same = (a: typeof current, b: typeof current) => a.name === b.name && a.paper === b.paper
-  const isCurated = PALETTES.some((p) => same(p, current))
-  const list = isCurated ? PALETTES : [current, ...PALETTES]
+  // Plain white first, so a page can always go back to how it started.
+  const sets = [WHITE, ...PALETTES]
+  const isCurated = sets.some((p) => same(p, current))
+  const list = isCurated ? sets : [current, ...sets]
 
   return (
     <Section

@@ -21,7 +21,8 @@ export function DrawPanel({
   art: DrawArt | null
 }) {
   const { symmetry, strokes, rotation, turned } = state.draw
-  const paper = state.palette.paper
+  const palette = state.modePalettes.draw
+  const paper = palette.paper
 
   // Each choice previews *your* drawing in that style, not a stock picture.
   const options = useMemo(
@@ -106,7 +107,7 @@ export function DrawPanel({
               className="ink"
               style={{ background: c }}
               title={c}
-              onClick={() => dispatch({ type: 'palette', palette: { ...state.palette, name: 'Custom', paper: c } })}
+              onClick={() => dispatch({ type: 'palette', palette: { ...palette, name: 'Custom', paper: c } })}
             >
               <span className="sr-only">{c}</span>
             </button>

@@ -7,14 +7,15 @@ import { MiniPattern } from './MiniPattern'
 
 export function PaperPanel({ state, dispatch }: { state: PatternState; dispatch: Dispatch<Action> }) {
   const { kind, spacingMm, weight } = state.paper
+  const palette = state.modePalettes.paper
 
   const options = useMemo(
     () =>
       PAPERS.map((p) => ({
         ...p,
-        renderer: createPaperRenderer({ kind: p.id, spacingMm: p.defaultMm, weight: 0.5, palette: state.palette }),
+        renderer: createPaperRenderer({ kind: p.id, spacingMm: p.defaultMm, weight: 0.5, palette }),
       })),
-    [state.palette],
+    [palette],
   )
 
   const named = spacingName(kind, spacingMm)

@@ -63,7 +63,13 @@ export interface PatternState {
   mode: Mode
   /** 0..1, mapped per mode to a pixel size ("smaller ↔ bigger"). */
   size: number
+  /** Colours for Shapes. */
   palette: Palette
+  /**
+   * Draw and Paper keep colours of their own and start on white, so a
+   * Surprise me in Shapes never repaints them. Only changes made there do.
+   */
+  modePalettes: { draw: Palette; paper: Palette }
   seed: number
   shapes: {
     /** Chosen shapes, in the order they repeat. */

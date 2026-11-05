@@ -92,12 +92,15 @@ export function DrawFrame({
   state,
   dispatch,
   box,
+  active,
   onEditor,
   onArt,
 }: {
   state: PatternState
   dispatch: Dispatch<Action>
   box: FrameBox
+  /** False while the frame is tucked away: the canvas keeps the pattern up to date but takes no keys. */
+  active: boolean
   onEditor: (editor: Editor | null) => void
   onArt: (art: DrawArt | null) => void
 }) {
@@ -125,6 +128,13 @@ export function DrawFrame({
 
   useEffect(() => () => onEditor(null), [onEditor])
 
+  // Tucked away, the canvas mustn't catch Delete or ⌘Z meant for nothing in particular.
+  useEffect(() => {
+    if (!editor) return
+    if (active) editor.focus()
+    else editor.blur()
+  }, [editor, active])
+
   // One tile always fills the frame, whatever the window size.
   useEffect(() => {
     if (editor) fitTile(editor, box.w)
@@ -146,7 +156,7 @@ export function DrawFrame({
   // Paste works even when the canvas doesn't have focus (say, after using the panel):
   // pictures and SVG code still land in the drawing.
   useEffect(() => {
-    if (!editor) return
+    if (!editor || !active) return
     const onPaste = (e: ClipboardEvent) => {
       if (editor.getIsFocused()) return
       if (e.target instanceof Element && e.target.closest('input, textarea, [contenteditable]')) return
@@ -162,7 +172,7 @@ export function DrawFrame({
     }
     window.addEventListener('paste', onPaste)
     return () => window.removeEventListener('paste', onPaste)
-  }, [editor])
+  }, [editor, active])
 
   // The pattern is made from a picture of the drawing, refreshed as you draw.
   useEffect(() => (editor ? watchArt(editor, onArt) : undefined), [editor, onArt])

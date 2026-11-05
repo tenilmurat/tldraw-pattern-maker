@@ -1807,3 +1807,9 @@ button {
   width: 16px;
   height: 16px;
 }
+
+/* The frame tucked away behind "Edit your tile": out of sight, but its canvas keeps running. */
+.work-frame.is-collapsed {
+  visibility: hidden;
+  pointer-events: none;
+}

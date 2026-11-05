@@ -21,6 +21,8 @@ function loadSaved(fallback: PatternState): PatternState {
       ...saved,
       shapes: { ...fallback.shapes, ...saved.shapes, selected: null },
       draw: { ...fallback.draw, ...saved.draw, past: [], future: [] },
+      // Saved before Draw and Paper had colours of their own: they start on white.
+      modePalettes: { ...fallback.modePalettes, ...saved.modePalettes },
       photo: { ...saved.photo, src: null, name: 'Sample' },
     }
   } catch {

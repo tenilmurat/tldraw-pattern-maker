@@ -52,6 +52,7 @@ export function WorkFrame({
   title,
   hint,
   onHide,
+  collapsed = false,
   children,
 }: {
   box: FrameBox
@@ -59,6 +60,8 @@ export function WorkFrame({
   title: string
   hint: string
   onHide: () => void
+  /** Tucked away out of sight (but still running), behind "Edit your tile". */
+  collapsed?: boolean
   children: ReactNode
 }) {
   const grid = gridFor(paper)
@@ -73,7 +76,12 @@ export function WorkFrame({
   } as CSSProperties
 
   return (
-    <div className="work-frame" style={style}>
+    <div
+      className={`work-frame ${collapsed ? 'is-collapsed' : ''}`}
+      style={style}
+      aria-hidden={collapsed || undefined}
+      inert={collapsed || undefined}
+    >
       <div className="work-frame-label">
         <span>
           <b>{title}</b> {hint}

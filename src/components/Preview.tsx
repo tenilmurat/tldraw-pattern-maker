@@ -5,7 +5,7 @@ import { PEN } from '../engine/pens'
 import type { Renderer } from '../engine/renderer'
 import type { ShapeRenderer } from '../engine/shapes'
 import type { DrawArt } from '../engine/tldraw'
-import type { Action } from '../state/reducer'
+import { paletteOf, type Action } from '../state/reducer'
 import type { PatternState } from '../state/types'
 import { Icons } from './controls'
 import { DrawToolbar } from './draw/DrawToolbar'
@@ -43,10 +43,18 @@ export function Preview({
   const sizeRef = useRef({ w: 0, h: 0 })
   const rendererRef = useRef(renderer)
   const [view, setView] = useState({ w: 0, h: 0 })
-  // Hiding the frame lasts until you switch mode or surface.
-  const [hiddenFor, setHiddenFor] = useState<string | null>(null)
+  // Each time you come to a mode its frame starts the same way: Shapes opens on the whole
+  // pattern with the frame tucked behind "Edit your tile"; Draw opens with its frame out.
+  // Showing or hiding it yourself lasts until you switch mode or surface.
   const frameKey = `${state.mode}:${state.draw.surface}`
-  const frameHidden = hiddenFor === frameKey
+  const [choice, setChoice] = useState<{ key: string; hidden: boolean } | null>(null)
+  // Leaving a mode forgets the choice, so coming back starts the way it always does.
+  const [lastKey, setLastKey] = useState(frameKey)
+  if (lastKey !== frameKey) {
+    setLastKey(frameKey)
+    setChoice(null)
+  }
+  const frameHidden = choice?.key === frameKey ? choice.hidden : state.mode === 'shapes'
   const [cursor, setCursor] = useState<[number, number] | null>(null)
 
   // Where you're looking on the endless pattern (pan and zoom).
@@ -102,7 +110,8 @@ export function Preview({
 
   const isDraw = state.mode === 'draw'
   const drawOnPattern = isDraw && state.draw.surface === 'pattern'
-  const hasFrame = (state.mode === 'shapes' || (isDraw && state.draw.surface === 'frame')) && !frameHidden
+  const drawFrameSurface = isDraw && state.draw.surface === 'frame'
+  const hasFrame = (state.mode === 'shapes' || drawFrameSurface) && !frameHidden
   // The drawing canvas is always square, whatever the repeat style; Shapes shows one tile.
   const aspect = isDraw ? 1 : renderer.tileH / renderer.tileW
   const box = view.w ? frameBox(view.w, view.h, aspect, isDraw) : null
@@ -163,7 +172,7 @@ export function Preview({
           strokes: state.draw.strokes,
           symmetry: state.draw.symmetry,
           size: state.size,
-          paper: state.palette.paper,
+          paper: paletteOf(state).paper,
           rotation: state.draw.rotation,
           art,
           turned: state.draw.turned,
@@ -220,16 +229,25 @@ export function Preview({
         />
       )}
 
-      {hasFrame && box && (
+      {/* In Draw the tldraw canvas stays mounted while the frame is tucked away: the pattern is made from it. */}
+      {(hasFrame || drawFrameSurface) && box && (
         <WorkFrame
+          collapsed={!hasFrame}
           box={box}
-          paper={state.palette.paper}
+          paper={paletteOf(state).paper}
           title={frameTitle}
           hint={frameHint}
-          onHide={() => setHiddenFor(frameKey)}
+          onHide={() => setChoice({ key: frameKey, hidden: true })}
         >
           {isDraw ? (
-            <DrawFrame state={state} dispatch={dispatch} box={box} onEditor={setEditor} onArt={onArt} />
+            <DrawFrame
+              state={state}
+              dispatch={dispatch}
+              box={box}
+              active={hasFrame}
+              onEditor={setEditor}
+              onArt={onArt}
+            />
           ) : (
             <ShapeFrame state={state} dispatch={dispatch} renderer={renderer as ShapeRenderer} box={box} />
           )}
@@ -254,8 +272,8 @@ export function Preview({
         </button>
       </div>
 
-      {frameHidden && (state.mode === 'shapes' || isDraw) && (
-        <button type="button" className="show-frame" onClick={() => setHiddenFor(null)}>
+      {frameHidden && (state.mode === 'shapes' || drawFrameSurface) && (
+        <button type="button" className="show-frame" onClick={() => setChoice({ key: frameKey, hidden: false })}>
           {Icons.draw}
           Edit your tile
         </button>

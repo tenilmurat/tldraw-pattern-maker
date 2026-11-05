@@ -22,6 +22,9 @@ export const PALETTES: Palette[] = [
   { name: 'Clay', paper: '#f3e6da', inks: ['#a4573b', '#3e5c58', '#d9a679'] },
 ]
 
+/** Plain white paper with soft ink, where Draw and Paper start. */
+export const WHITE: Palette = { name: 'White', paper: '#ffffff', inks: ['#3c3c3c', '#8a8a8a', '#b9b9b9'] }
+
 // --- OKLCH → sRGB -----------------------------------------------------------
 
 function oklchToLinear(L: number, C: number, hDeg: number): [number, number, number] {
