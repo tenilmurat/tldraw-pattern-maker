@@ -129,3 +129,21 @@ describe('Edit your tile', () => {
     }
   })
 })
+
+describe('Turning the drawing', () => {
+  const at = (deg: number) => reducer(initialState, { type: 'drawRotation', deg })
+
+  test('the same angle again changes nothing, so the dial and tldraw can never echo each other forever', () => {
+    const turned = at(60)
+    expect(reducer(turned, { type: 'drawRotation', deg: 60 })).toBe(turned)
+    const synced = reducer(turned, { type: 'drawTurned', deg: 60 })
+    expect(reducer(synced, { type: 'drawTurned', deg: 60 })).toBe(synced)
+  })
+
+  test('angles stay between -180° and 180°, and a half turn reads 180°', () => {
+    expect(at(540).draw.rotation).toBe(180)
+    expect(at(-180).draw.rotation).toBe(180)
+    expect(at(-200).draw.rotation).toBe(160)
+    expect(at(0).draw.rotation).toBe(0)
+  })
+})

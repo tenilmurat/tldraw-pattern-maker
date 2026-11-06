@@ -109,7 +109,8 @@ export function DrawFrame({
   const { rotation } = state.draw
   // The turn tldraw's shapes are at. It lives in the tldraw document, so undo and redo change it too.
   const tlTurn = useValue('drawing turn', () => (editor ? turnOf(editor) : null), [editor])
-  const seenTurn = useRef<number | null>(null)
+  // The last turn this frame gave tldraw itself, so its echo isn't mistaken for an undo.
+  const applied = useRef<number | null>(null)
 
   const mount = (e: Editor) => {
     fitTile(e, box.w)
@@ -142,16 +143,24 @@ export function DrawFrame({
 
   // The dial (or the panel slider) turns the drawing: every shape turns around the middle of the tile.
   useEffect(() => {
-    if (editor) turnTo(editor, rotation)
+    if (!editor) return
+    applied.current = rotation
+    turnTo(editor, rotation)
   }, [editor, rotation])
 
   // When tldraw's turn changes by itself (undo, redo), the dial follows it.
+  // It reads tldraw's turn as it is now, not the value this render saw: while the
+  // dial is moving (Reset eases back every frame), that value can be a step behind,
+  // and acting on it would turn the drawing back and forth forever.
   useEffect(() => {
-    if (tlTurn === null) return
-    if (seenTurn.current !== null && seenTurn.current !== tlTurn) dispatch({ type: 'drawRotation', deg: tlTurn })
-    seenTurn.current = tlTurn
-    dispatch({ type: 'drawTurned', deg: tlTurn })
-  }, [tlTurn, dispatch])
+    if (!editor || tlTurn === null) return
+    const now = turnOf(editor)
+    if (applied.current !== null && now !== applied.current) {
+      applied.current = now
+      dispatch({ type: 'drawRotation', deg: now })
+    }
+    dispatch({ type: 'drawTurned', deg: now })
+  }, [editor, tlTurn, dispatch])
 
   // Paste works even when the canvas doesn't have focus (say, after using the panel):
   // pictures and SVG code still land in the drawing.

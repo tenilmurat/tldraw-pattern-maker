@@ -326,9 +326,13 @@ export function reducer(state: PatternState, action: Action): PatternState {
     case 'drawRotation': {
       // Kept within -180..180 so the readout never says 540°; a half turn reads 180°, not -180°.
       const deg = ((((action.deg + 180) % 360) + 360) % 360) - 180
-      return { ...state, draw: { ...state.draw, rotation: deg === -180 ? 180 : deg } }
+      const rotation = deg === -180 ? 180 : deg
+      // Nothing changed: keep the same state, so nothing redraws.
+      if (rotation === state.draw.rotation) return state
+      return { ...state, draw: { ...state.draw, rotation } }
     }
     case 'drawTurned':
+      if (action.deg === state.draw.turned) return state
       return { ...state, draw: { ...state.draw, turned: action.deg } }
     case 'adoptStrokes':
       // The lines now live in the tldraw frame, unturned; the frame turns them to match.

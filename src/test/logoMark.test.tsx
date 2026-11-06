@@ -82,6 +82,25 @@ describe('Header logo hover', () => {
     expect(shows()).toBe('logo')
   })
 
+  test('if the "leave" event is lost, moving the mouse anywhere else still brings the logo back', () => {
+    enter()
+    wait(FULL + 50)
+    expect(shows()).toBe('credit')
+    // No pointerout reaches the logo (say it was lost on a part redrawn mid-hover);
+    // the next movement elsewhere on the page is enough.
+    act(() => document.body.dispatchEvent(new PointerEvent('pointermove', { bubbles: true })))
+    wait(FULL + 50)
+    expect(shows()).toBe('logo')
+  })
+
+  test('moving the mouse over the logo itself keeps the credit', () => {
+    enter()
+    wait(FULL + 50)
+    act(() => logo().dispatchEvent(new PointerEvent('pointermove', { bubbles: true })))
+    wait(FULL + 50)
+    expect(shows()).toBe('credit')
+  })
+
   test('if frames stop coming midway, it still lands where the mouse is', () => {
     // Hand out frames by hand, so they can stop the way they do in a hidden tab.
     const frames: FrameRequestCallback[] = []

@@ -62,8 +62,32 @@ export function LogoMark({ height = 24 }: { height?: number }) {
     if (!loop.current) loop.current = { raf: requestAnimationFrame(step), last: performance.now() }
   }
 
-  // Leaving the page mid-swap must not leave a frame loop or timer running.
-  useEffect(() => stop, [])
+  // A backup for a missed "leave": while the credit is showing or on its way,
+  // any mouse movement outside the logo sends it back.
+  const watchOut = useRef<((e: PointerEvent) => void) | null>(null)
+  const unwatch = () => {
+    if (watchOut.current) document.removeEventListener('pointermove', watchOut.current)
+    watchOut.current = null
+  }
+  const watch = () => {
+    if (watchOut.current) return
+    watchOut.current = (e: PointerEvent) => {
+      const svg = ref.current
+      if (svg && e.target instanceof Node && svg.contains(e.target)) return
+      unwatch()
+      head(0)
+    }
+    document.addEventListener('pointermove', watchOut.current)
+  }
+
+  // Leaving the page mid-swap must not leave a frame loop, timer or listener running.
+  useEffect(
+    () => () => {
+      stop()
+      unwatch()
+    },
+    [],
+  )
 
   return (
     <svg
@@ -74,8 +98,14 @@ export function LogoMark({ height = 24 }: { height?: number }) {
       width={(height * LOGO.w) / LOGO.h}
       role="img"
       aria-label="tldraw pattern, designed by Murat"
-      onPointerEnter={() => head(1)}
-      onPointerLeave={() => head(0)}
+      onPointerEnter={() => {
+        head(1)
+        watch()
+      }}
+      onPointerLeave={() => {
+        unwatch()
+        head(0)
+      }}
       dangerouslySetInnerHTML={{ __html: STILL }}
     />
   )
